@@ -11,7 +11,7 @@ import (
 type Nest string
 
 // Saves the bug into the nest.
-func (n Nest) Put(key string, b Bug) error {
+func (n Nest) Put(key []byte, b Bug) error {
 	var buf bytes.Buffer
 	var enc = gob.NewEncoder(&buf)
 
@@ -26,11 +26,11 @@ func (n Nest) Put(key string, b Bug) error {
 	}
 	defer db.Close()
 
-	return db.Put([]byte(key), buf.Bytes())
+	return db.Put(key, buf.Bytes())
 }
 
 // Retrieves a bug from the nest.
-func (n Nest) Get(key string) (Bug, error) {
+func (n Nest) Get(key []byte) (Bug, error) {
 	var buf bytes.Buffer
 	var bg Bug
 	var dec = gob.NewDecoder(&buf)
@@ -41,7 +41,7 @@ func (n Nest) Get(key string) (Bug, error) {
 	}
 	defer db.Close()
 
-	b, err := db.Get([]byte(key))
+	b, err := db.Get(key)
 	if err != nil {
 		return bg, err
 	}
@@ -56,13 +56,13 @@ func (n Nest) Get(key string) (Bug, error) {
 }
 
 // Deletes a bug from the nest.
-func (n Nest) Delete(key string) error {
+func (n Nest) Delete(key []byte) error {
 	db, err := bitcask.Open(string(n))
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	return db.Delete([]byte(key))
+	return db.Delete(key)
 }
 
 // Returns all the bugs' keys.
