@@ -19,13 +19,13 @@ type Comment struct {
 }
 
 type Bug struct {
-	Id   string   `json:"id"`
-	Body string   `json:"body"`
-	Open bool     `json:"is_open"`
-	Tags []string `json:"tags"`
-	Date int64    `json:"date"`
-	// Comments []Comment `json:"comments"`
-	// Author   string    `json:"author"`
+	Id       string    `json:"id"`
+	Body     string    `json:"body"`
+	Open     bool      `json:"is_open"`
+	Tags     []string  `json:"tags"`
+	Date     int64     `json:"date"`
+	Comments []Comment `json:"comments"`
+	Author   string    `json:"author"`
 }
 
 type Response struct {
@@ -42,7 +42,7 @@ var nest Nest
 func NewResponse(b *Bug, n []Bug, e error) Response {
 	return Response{
 		Ok:   e == nil,
-		Err:  e.Error(),
+		Err:  etos(e),
 		Bug:  b,
 		Nest: n,
 	}
@@ -56,6 +56,15 @@ func NewResponseJson(b *Bug, n []Bug, e error) []byte {
 		log.Println(err)
 	}
 	return j
+}
+
+// Returns the string containing the error mesage or an empty string if the
+// error is nil.
+func etos(err error) string {
+	if err != nil {
+		return err.Error()
+	}
+	return ""
 }
 
 // Returns the value of an url raw query or error if missing.
