@@ -51,11 +51,11 @@ func NewResponse(b *Bug, n []Bug, e error) Response {
 // Returns the JSON of a new Response object with the data in input.
 func NewResponseJson(b *Bug, n []Bug, e error) []byte {
 	resp := NewResponse(b, n, e)
-	json, err := json.Marshal(resp)
+	j, err := json.Marshal(resp)
 	if err != nil {
 		log.Println(err)
 	}
-	return json
+	return j
 }
 
 // Returns the value of an url raw query or error if missing.
@@ -76,7 +76,32 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handles the /get endpoint.
 func getHandler(w http.ResponseWriter, r *http.Request) {
+	var bugs []Bug
 
+	if r.Method != "GET" {
+		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
+		fmt.Fprintln(w, string(resp))
+		return
+	}
+
+	keys, err := nest.Keys()
+	if err != nil {
+		resp := NewResponseJson(nil, nil, err)
+		fmt.Fprintln(w, string(resp))
+		return
+	}
+
+	for k := range keys {
+		bug, err := nest.Get(k)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		bugs = append(bugs, bug)
+	}
+
+	resp := NewResponseJson(nil, bugs, nil)
+	fmt.Fprintln(w, string(resp))
 }
 
 // Handles the /del endpoint.
