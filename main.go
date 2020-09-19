@@ -36,7 +36,6 @@ type Response struct {
 	Nest []Bug  `json:"nest,omitempty"`
 }
 
-var guid xid.ID
 var nest Nest
 
 // Returns a Response object with the data in input.
@@ -81,20 +80,13 @@ func getQuery(name string, rawQuery string) (string, error) {
 
 // Handles the /put endpoint.
 func putHandler(w http.ResponseWriter, r *http.Request) {
-	var key []byte
+	var key string
 	var bug Bug
 
 	if r.Method != "POST" {
 		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
 		fmt.Fprintln(w, string(resp))
 		return
-	}
-
-	id, err := getQuery("id", r.URL.RawQuery)
-	if err != nil {
-		key = guid.Bytes()
-	} else {
-		key = []byte(id)
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -111,7 +103,16 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = nest.Put(key, bug)
+	id, err := getQuery("id", r.URL.RawQuery)
+	if err != nil {
+		key = xid.New().String()
+		bug.Id = key
+		fmt.Println(key)
+	} else {
+		key = id
+	}
+
+	err = nest.Put([]byte(key), bug)
 	if err != nil {
 		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
 		fmt.Fprintln(w, string(resp))
@@ -189,7 +190,6 @@ func main() {
 	http.HandleFunc("/del", delHandler)
 
 	nest = Nest(path)
-
 	port = fmt.Sprintf(":%s", port)
 	log.Fatal(http.ListenAndServe(port, nil))
 }
