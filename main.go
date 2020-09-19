@@ -36,6 +36,11 @@ type Response struct {
 	Nest []Bug  `json:"nest,omitempty"`
 }
 
+const (
+	OK                    = 200
+	INTERNAL_SERVER_ERROR = 500
+)
+
 var nest Nest
 
 // Returns a Response object with the data in input.
@@ -78,28 +83,36 @@ func getQuery(name string, rawQuery string) (string, error) {
 	return "", fmt.Errorf("%s: query not found", name)
 }
 
+// Creates the response to send back and writes it in w.
+func writeResponse(w http.ResponseWriter, b []Bug, e error) {
+	var status = OK
+	resp := NewResponseJson(nil, b, e)
+	if e != nil {
+		status = INTERNAL_SERVER_ERROR
+	}
+	w.WriteHeader(status)
+	fmt.Fprintln(w, string(resp))
+}
+
 // Handles the /put endpoint.
 func putHandler(w http.ResponseWriter, r *http.Request) {
 	var key string
 	var bug Bug
 
 	if r.Method != "POST" {
-		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, errors.New("Invalid request"))
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, errors.New("Invalid request"))
 		return
 	}
 
 	err = json.Unmarshal(body, &bug)
 	if err != nil {
-		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, errors.New("Invalid request"))
 		return
 	}
 
@@ -114,13 +127,11 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = nest.Put([]byte(key), bug)
 	if err != nil {
-		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, errors.New("Invalid request"))
 		return
 	}
 
-	resp := NewResponseJson(nil, nil, nil)
-	fmt.Fprintln(w, string(resp))
+	writeResponse(w, nil, nil)
 }
 
 // Handles the /get endpoint.
@@ -128,15 +139,13 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	var bugs []Bug
 
 	if r.Method != "GET" {
-		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, errors.New("Invalid request"))
 		return
 	}
 
 	keys, err := nest.Keys()
 	if err != nil {
-		resp := NewResponseJson(nil, nil, err)
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, err)
 		return
 	}
 
@@ -149,34 +158,29 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		bugs = append(bugs, bug)
 	}
 
-	resp := NewResponseJson(nil, bugs, nil)
-	fmt.Fprintln(w, string(resp))
+	writeResponse(w, bugs, nil)
 }
 
 // Handles the /del endpoint.
 func delHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "DELETE" {
-		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, errors.New("Invalid request"))
 		return
 	}
 
 	id, err := getQuery("id", r.URL.RawQuery)
 	if err != nil {
-		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, errors.New("Invalid request"))
 		return
 	}
 
 	err = nest.Delete([]byte(id))
 	if err != nil {
-		resp := NewResponseJson(nil, nil, errors.New("Invalid request"))
-		fmt.Fprintln(w, string(resp))
+		writeResponse(w, nil, errors.New("Invalid request"))
 		return
 	}
 
-	resp := NewResponseJson(nil, nil, nil)
-	fmt.Fprintln(w, string(resp))
+	writeResponse(w, nil, nil)
 }
 
 func main() {
@@ -190,6 +194,5 @@ func main() {
 	http.HandleFunc("/del", delHandler)
 
 	nest = Nest(path)
-	port = fmt.Sprintf(":%s", port)
-	log.Fatal(http.ListenAndServe(port, nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
