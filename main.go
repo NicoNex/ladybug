@@ -193,6 +193,7 @@ func main() {
 	http.HandleFunc("/get", getHandler)
 	http.HandleFunc("/del", delHandler)
 
-	nest = Nest(path)
+	// nest = Nest(path)
+	nest = NewNest(path)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }

@@ -8,34 +8,41 @@ import (
 )
 
 // Just the nest of all the bugs.
-type Nest string
+type Nest struct {
+	path string
+	buf  bytes.Buffer
+	enc  *gob.Encoder
+	dec  *gob.Decoder
+}
+
+func NewNest(path string) Nest {
+	n := Nest{path: path}
+	n.enc = gob.NewEncoder(&n.buf)
+	n.dec = gob.NewDecoder(&n.buf)
+	return n
+}
 
 // Saves the bug into the nest.
 func (n Nest) Put(key []byte, b Bug) error {
-	var buf bytes.Buffer
-	var enc = gob.NewEncoder(&buf)
-
-	err := enc.Encode(b)
-	if err != nil {
+	defer n.buf.Reset()
+	if err := n.enc.Encode(b); err != nil {
 		return err
 	}
 
-	db, err := bitcask.Open(string(n))
+	db, err := bitcask.Open(n.path)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-
-	return db.Put(key, buf.Bytes())
+	return db.Put(key, n.buf.Bytes())
 }
 
 // Retrieves a bug from the nest.
 func (n Nest) Get(key []byte) (Bug, error) {
-	var buf bytes.Buffer
+	defer n.buf.Reset()
 	var bg Bug
-	var dec = gob.NewDecoder(&buf)
 
-	db, err := bitcask.Open(string(n))
+	db, err := bitcask.Open(n.path)
 	if err != nil {
 		return bg, err
 	}
@@ -46,18 +53,17 @@ func (n Nest) Get(key []byte) (Bug, error) {
 		return bg, err
 	}
 
-	_, err = buf.Write(b)
-	if err != nil {
+	if _, err = n.buf.Write(b); err != nil {
 		return bg, err
 	}
 
-	err = dec.Decode(&bg)
+	err = n.dec.Decode(&bg)
 	return bg, err
 }
 
 // Deletes a bug from the nest.
 func (n Nest) Delete(key []byte) error {
-	db, err := bitcask.Open(string(n))
+	db, err := bitcask.Open(n.path)
 	if err != nil {
 		return err
 	}
@@ -67,7 +73,7 @@ func (n Nest) Delete(key []byte) error {
 
 // Returns all the bugs' keys.
 func (n Nest) Keys() (chan []byte, error) {
-	db, err := bitcask.Open(string(n))
+	db, err := bitcask.Open(n.path)
 	if err != nil {
 		return nil, err
 	}
