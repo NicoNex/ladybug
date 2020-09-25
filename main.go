@@ -106,13 +106,13 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		writeResponse(w, nil, err)
 		return
 	}
 
 	err = json.Unmarshal(body, &bug)
 	if err != nil {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		writeResponse(w, nil, err)
 		return
 	}
 
@@ -127,7 +127,7 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = nest.Put([]byte(key), bug)
 	if err != nil {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		writeResponse(w, nil, err)
 		return
 	}
 
@@ -170,13 +170,13 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 
 	id, err := getQuery("id", r.URL.RawQuery)
 	if err != nil {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		writeResponse(w, nil, err)
 		return
 	}
 
 	err = nest.Delete([]byte(id))
 	if err != nil {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		writeResponse(w, nil, err)
 		return
 	}
 
