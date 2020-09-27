@@ -1,3 +1,63 @@
 #logo {
   width: 4vw;
+  float: right;
 }
+
+#menu {
+  width: 3vw;
+  float: left;
+}
+
+:host nb-layout-header button:last-child {
+  margin-left: right;
+}
+
+#container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+
+#leftside {
+  width: 19%;
+  float: right;
+}
+
+#leftsidecontainer {
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+
+#left {
+  width: 30%;
+  display: flex;
+}
+
+#right {
+  width: 70%;
+  display: flex;
+}
+
+#middleside {
+  width: 56%;
+}
+
+#rightside {
+  width: 25%;
+}
+
+#button-menu {
+  height: 100%;
+  width: 65%;
+  background: cadetblue;
+}
+
+#ladyspan {
+  text-align: end;
+  width: 100%;
+  margin-top: 10px;
+  font-family: 'ladyfonts';
+  font-size: 40px;
+}
+

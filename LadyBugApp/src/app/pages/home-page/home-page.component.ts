@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { NbSidebarService } from '@nebular/theme';
 
 @Component({
   selector: 'app-home-page',
@@ -7,9 +8,12 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HomePageComponent implements OnInit {
 
-  constructor() { }
+  constructor(private sidebarService: NbSidebarService) { }
 
-  ngOnInit(): void {
+  ngOnInit(): void {}
+
+  toggleCompact(): void {
+    this.sidebarService.toggle(true, 'left');
   }
 
 }
