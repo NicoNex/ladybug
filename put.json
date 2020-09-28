@@ -1,0 +1,23 @@
+{
+	"body": "il mio fantastico SASAMIKE",
+	"open": true,
+	"tags": [
+		"font-end",
+		"back-end",
+		"angular",
+		"cazzi-magici"
+	],
+	"date": 1600503069,
+	"comments": [
+		{
+			"date": 1600503069,
+			"text": "il mio mirabolante commento",
+			"author": "NicoNex"
+		},
+		{
+			"date": 1600503069,
+			"text": "Altro mirabolante commento",
+			"author": "Giuseppe"
+		}
+	]
+}

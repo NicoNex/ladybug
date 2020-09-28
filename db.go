@@ -3,58 +3,49 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
-	"sync"
+	"log"
+	// "sync"
 
 	"github.com/prologic/bitcask"
 )
 
 // Just the nest of all the bugs.
 type Nest struct {
-	path string
-	buf  bytes.Buffer
-	enc  *gob.Encoder
-	dec  *gob.Decoder
-	mux  *sync.Mutex
+	buf bytes.Buffer
+	enc *gob.Encoder
+	dec *gob.Decoder
+	db  *bitcask.Bitcask
 }
 
 func NewNest(path string) Nest {
-	n := Nest{path: path, mux: new(sync.Mutex)}
+	db, err := bitcask.Open(path, bitcask.WithSync(true))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var n Nest
+
 	n.enc = gob.NewEncoder(&n.buf)
 	n.dec = gob.NewDecoder(&n.buf)
+	n.db = db
 	return n
 }
 
 // Saves the bug into the nest.
 func (n Nest) Put(key []byte, b Bug) error {
-	// defer n.buf.Reset()
-	defer n.mux.Unlock()
 	if err := n.enc.Encode(b); err != nil {
 		return err
 	}
-
-	n.mux.Lock()
-	db, err := bitcask.Open(n.path)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	return db.Put(key, n.buf.Bytes())
+	err := n.db.Put(key, n.buf.Bytes())
+	// go n.sync()
+	return err
 }
 
 // Retrieves a bug from the nest.
 func (n Nest) Get(key []byte) (Bug, error) {
-	// defer n.buf.Reset()
-	defer n.mux.Unlock()
 	var bg Bug
 
-	n.mux.Lock()
-	db, err := bitcask.Open(n.path)
-	if err != nil {
-		return bg, err
-	}
-	defer db.Close()
-
-	b, err := db.Get(key)
+	b, err := n.db.Get(key)
 	if err != nil {
 		return bg, err
 	}
@@ -69,43 +60,29 @@ func (n Nest) Get(key []byte) (Bug, error) {
 
 // Deletes a bug from the nest.
 func (n Nest) Delete(key []byte) error {
-	db, err := bitcask.Open(n.path)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	return db.Delete(key)
+	err := n.db.Delete(key)
+	// go n.sync()
+	return err
 }
 
 // Returns all the bugs' keys.
 func (n Nest) Keys() (chan []byte, error) {
-	db, err := bitcask.Open(n.path)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-	return db.Keys(), nil
+	return n.db.Keys(), nil
 }
 
 // Returns the next bug id.
 func (n Nest) NextId() (int64, error) {
 	var key = []byte("id_counter")
 
-	db, err := bitcask.Open(n.path)
-	if err != nil {
-		return 0, err
-	}
-	defer db.Close()
-
-	if !db.Has(key) {
+	if !n.db.Has(key) {
 		go func() {
 			val := itob(0)
-			db.Put(key, val[:])
+			n.db.Put(key, val[:])
 		}()
 		return 0, nil
 	}
 
-	b, err := db.Get(key)
+	b, err := n.db.Get(key)
 	if err != nil {
 		return 0, nil
 	}
@@ -114,9 +91,20 @@ func (n Nest) NextId() (int64, error) {
 	copy(raw[:], b[0:8])
 	ret := btoi(raw) + 1
 	val := itob(ret)
-	if err = db.Put(key, val[:]); err != nil {
+	if err = n.db.Put(key, val[:]); err != nil {
 		return 0, err
 	}
 
+	// go n.sync()
 	return ret, nil
+}
+
+func (n Nest) Close() error {
+	return n.db.Close()
+}
+
+func (n Nest) sync() {
+	if err := n.db.Sync(); err != nil {
+		log.Println(err)
+	}
 }

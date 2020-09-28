@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
+	// "sync"
 )
 
 type Comment struct {
@@ -162,9 +162,7 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handles the /get endpoint.
 func getHandler(w http.ResponseWriter, r *http.Request) {
-	var bch = make(chan Bug)
-	var och = make(chan []Bug, 1)
-	var wg sync.WaitGroup
+	var bugs []Bug
 
 	if r.Method != "GET" {
 		writeResponse(w, nil, errors.New("Invalid request"))
@@ -177,30 +175,16 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go func() {
-		var bugs []Bug
-		for b := range bch {
-			bugs = append(bugs, b)
-		}
-		och <- bugs
-	}()
-
 	for k := range keys {
-		wg.Add(1)
-		go func(bch chan Bug) {
-			defer wg.Done()
-			bug, err := nest.Get(k)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			bch <- bug
-		}(bch)
+		bug, err := nest.Get(k)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		bugs = append(bugs, bug)
 	}
-	wg.Wait()
-	close(bch)
 
-	writeResponse(w, <-och, nil)
+	writeResponse(w, bugs, nil)
 }
 
 // Handles the /del endpoint.
