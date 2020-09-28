@@ -4,7 +4,7 @@
 }
 
 #menu {
-  width: 3vw;
+  width: 45px;
   float: left;
 }
 
@@ -12,13 +12,13 @@
   margin-left: right;
 }
 
-#container {
+:host ::ng-deep #container {
   height: 100%;
   width: 100%;
   display: flex;
 }
 
-#leftside {
+:host ::ng-deep #leftside {
   width: 19%;
   float: right;
 }
@@ -39,17 +39,17 @@
   display: flex;
 }
 
-#middleside {
+:host ::ng-deep #middleside {
   width: 56%;
 }
 
-#rightside {
+:host ::ng-deep #rightside {
   width: 25%;
 }
 
 #button-menu {
   height: 100%;
-  width: 65%;
+  width: 50px;
   background: cadetblue;
 }
 

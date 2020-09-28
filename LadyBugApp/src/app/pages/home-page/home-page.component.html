@@ -2,7 +2,7 @@
   <nb-layout-header fixed>
     <div id="container">
       <div id="leftside">
-        <div id ="leftsidecontainer">
+        <div id ="container">
           <div id="left">
             <button nbButton id="button-menu" status="basic" (click)="toggleCompact()">
               <img src="../assets/icons/menu-outline.svg" id="menu">
@@ -13,9 +13,7 @@
           </div>
         </div>
       </div>
-      <div id="middleside">
-        <button nbButton status="info" size="tiny">Toggle Compact</button>
-      </div>
+      <div id="middleside"></div>
       <div id="rightside">
         <div id="container">
           <div id="left"></div>
@@ -29,7 +27,9 @@
 
   <nb-sidebar tag="left"></nb-sidebar>
 
-  <nb-layout-column class="colored-column-warning">Layout Content</nb-layout-column>
+  <nb-layout-column class="colored-column-warning">
+    <app-issues></app-issues>
+  </nb-layout-column>
 
   <nb-layout-footer fixed>
     footer Content

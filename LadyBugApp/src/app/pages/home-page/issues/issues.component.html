@@ -1,0 +1,18 @@
+<nb-card size="medium">
+    <nb-card-header>
+      <div id="container">
+        <div id="leftside">
+            <input type="text" nbInput placeholder="Text field">
+        </div>
+        <div id="middleside"></div>
+        <div id="rightside">
+            <button nbButton style="float: right;" status="info" size="tiny">New Issue</button>
+        </div>
+      </div>
+    </nb-card-header>
+    <nb-list>
+      <nb-list-item *ngFor="let fruit of fruits">
+        {{ fruit }}
+      </nb-list-item>
+    </nb-list>
+</nb-card>
