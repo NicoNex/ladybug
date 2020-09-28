@@ -8,9 +8,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
-
-	"github.com/rs/xid"
+	"sync"
 )
 
 type Comment struct {
@@ -20,7 +20,7 @@ type Comment struct {
 }
 
 type Bug struct {
-	Id       string    `json:"id"`
+	Id       int64     `json:"id"`
 	Body     string    `json:"body"`
 	Open     bool      `json:"is_open"`
 	Tags     []string  `json:"tags"`
@@ -40,6 +40,8 @@ const (
 	OK                    = 200
 	INTERNAL_SERVER_ERROR = 500
 )
+
+const MASK = 0b11111111
 
 var nest Nest
 
@@ -72,6 +74,24 @@ func etos(err error) string {
 	return ""
 }
 
+// Converts an int64 to a [8]byte.
+func itob(a int64) (b [8]byte) {
+	for i := 0; i < 8; i++ {
+		var shift = i * 8
+		b[i] = byte((a & (MASK << shift)) >> shift)
+	}
+	return
+}
+
+// Converts a [8]byte to int64.
+func btoi(b [8]byte) (i int64) {
+	for k, v := range b {
+		var shift = k * 8
+		i |= int64(v) << shift
+	}
+	return
+}
+
 // Returns the value of an url raw query or error if missing.
 func getQuery(name string, rawQuery string) (string, error) {
 	for _, q := range strings.Split(rawQuery, "&") {
@@ -96,7 +116,7 @@ func writeResponse(w http.ResponseWriter, b []Bug, e error) {
 
 // Handles the /put endpoint.
 func putHandler(w http.ResponseWriter, r *http.Request) {
-	var key string
+	var key int64
 	var bug Bug
 
 	if r.Method != "POST" {
@@ -118,14 +138,20 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 
 	id, err := getQuery("id", r.URL.RawQuery)
 	if err != nil {
-		key = xid.New().String()
+		if key, err = nest.NextId(); err != nil {
+			writeResponse(w, nil, err)
+			return
+		}
 		bug.Id = key
-		fmt.Println(key)
 	} else {
-		key = id
+		if key, err = strconv.ParseInt(id, 10, 64); err != nil {
+			writeResponse(w, nil, err)
+			return
+		}
 	}
 
-	err = nest.Put([]byte(key), bug)
+	raw := itob(key)
+	err = nest.Put(raw[:], bug)
 	if err != nil {
 		writeResponse(w, nil, err)
 		return
@@ -136,7 +162,9 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handles the /get endpoint.
 func getHandler(w http.ResponseWriter, r *http.Request) {
-	var bugs []Bug
+	var bch = make(chan Bug)
+	var och = make(chan []Bug, 1)
+	var wg sync.WaitGroup
 
 	if r.Method != "GET" {
 		writeResponse(w, nil, errors.New("Invalid request"))
@@ -149,16 +177,30 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for k := range keys {
-		bug, err := nest.Get(k)
-		if err != nil {
-			log.Println(err)
-			continue
+	go func() {
+		var bugs []Bug
+		for b := range bch {
+			bugs = append(bugs, b)
 		}
-		bugs = append(bugs, bug)
-	}
+		och <- bugs
+	}()
 
-	writeResponse(w, bugs, nil)
+	for k := range keys {
+		wg.Add(1)
+		go func(bch chan Bug) {
+			defer wg.Done()
+			bug, err := nest.Get(k)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			bch <- bug
+		}(bch)
+	}
+	wg.Wait()
+	close(bch)
+
+	writeResponse(w, <-och, nil)
 }
 
 // Handles the /del endpoint.
@@ -168,13 +210,20 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := getQuery("id", r.URL.RawQuery)
+	qry, err := getQuery("id", r.URL.RawQuery)
 	if err != nil {
 		writeResponse(w, nil, err)
 		return
 	}
 
-	err = nest.Delete([]byte(id))
+	id, err := strconv.ParseInt(qry, 10, 64)
+	if err != nil {
+		writeResponse(w, nil, err)
+		return
+	}
+
+	raw := itob(id)
+	err = nest.Delete(raw[:])
 	if err != nil {
 		writeResponse(w, nil, err)
 		return
@@ -193,7 +242,6 @@ func main() {
 	http.HandleFunc("/get", getHandler)
 	http.HandleFunc("/del", delHandler)
 
-	// nest = Nest(path)
 	nest = NewNest(path)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
