@@ -42,7 +42,7 @@ const (
 
 const MASK = 0xff
 
-var nest Nest
+var nest *Nest
 
 func (b Bug) String() string {
 	return fmt.Sprintf("%d %s %s", b.Id, b.Body, b.Author)

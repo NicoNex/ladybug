@@ -11,26 +11,29 @@ import (
 // Just the nest of all the bugs.
 type Nest struct {
 	buf bytes.Buffer
+	dec *gob.Decoder
 	enc *gob.Encoder
 	db  *bitcask.Bitcask
 }
 
 var COUNTER_KEY = []byte("id_counter")
 
-func NewNest(path string) Nest {
+func NewNest(path string) *Nest {
 	db, err := bitcask.Open(path, bitcask.WithSync(true))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var n Nest
+	n.dec = gob.NewDecoder(&n.buf)
 	n.enc = gob.NewEncoder(&n.buf)
 	n.db = db
-	return n
+	return &n
 }
 
 // Saves the bug into the nest.
-func (n Nest) Put(key []byte, b Bug) error {
+func (n *Nest) Put(key []byte, b Bug) error {
+	defer n.buf.Reset()
 	if err := n.enc.Encode(b); err != nil {
 		return err
 	}
@@ -38,7 +41,8 @@ func (n Nest) Put(key []byte, b Bug) error {
 }
 
 // Retrieves a bug from the nest.
-func (n Nest) Get(key []byte) (Bug, error) {
+func (n *Nest) Get(key []byte) (Bug, error) {
+	defer n.buf.Reset()
 	var bg Bug
 
 	b, err := n.db.Get(key)
@@ -48,8 +52,8 @@ func (n Nest) Get(key []byte) (Bug, error) {
 	if _, err = n.buf.Write(b); err != nil {
 		return bg, err
 	}
-	dec := gob.NewDecoder(&n.buf)
-	return bg, dec.Decode(&bg)
+	// dec := gob.NewDecoder(&n.buf)
+	return bg, n.dec.Decode(&bg)
 }
 
 // Deletes a bug from the nest.
