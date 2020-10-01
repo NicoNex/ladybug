@@ -17,7 +17,7 @@ type Nest struct {
 
 var COUNTER_KEY = []byte("id_counter")
 
-func NewNest(path string) *Nest {
+func NewNest(path string) Nest {
 	db, err := bitcask.Open(path, bitcask.WithSync(true))
 	if err != nil {
 		log.Fatal(err)
@@ -26,7 +26,7 @@ func NewNest(path string) *Nest {
 	var n Nest
 	n.enc = gob.NewEncoder(&n.buf)
 	n.db = db
-	return &n
+	return n
 }
 
 // Saves the bug into the nest.
