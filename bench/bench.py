@@ -34,7 +34,7 @@ def put_bug(bug: dict) -> int:
 	return resp
 
 start = time.time()
-for i in range(1):
+for i in range(1000):
 	print(f"Put bug #{i}")
 	mock["body"] = f"bench_{i}"
 	resp = put_bug(mock)
