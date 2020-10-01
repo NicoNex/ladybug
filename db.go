@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
 	"log"
 
 	"github.com/prologic/bitcask"
@@ -13,7 +12,6 @@ import (
 type Nest struct {
 	buf bytes.Buffer
 	enc *gob.Encoder
-	dec *gob.Decoder
 	db  *bitcask.Bitcask
 }
 
@@ -27,38 +25,31 @@ func NewNest(path string) *Nest {
 
 	var n Nest
 	n.enc = gob.NewEncoder(&n.buf)
-	n.dec = gob.NewDecoder(&n.buf)
 	n.db = db
 	return &n
 }
 
 // Saves the bug into the nest.
 func (n Nest) Put(key []byte, b Bug) error {
-	// n.enc = gob.NewEncoder(&n.buf) // With this line it works.
 	if err := n.enc.Encode(b); err != nil {
 		return err
 	}
-	fmt.Println("before put", n.buf.Len())
-	err := n.db.Put(key, n.buf.Bytes())
-	fmt.Println("after put", n.buf.Len())
-	return err
+	return n.db.Put(key, n.buf.Bytes())
 }
 
 // Retrieves a bug from the nest.
 func (n Nest) Get(key []byte) (Bug, error) {
 	var bg Bug
-	// n.dec = gob.NewDecoder(&n.buf) // With this line it works.
+
 	b, err := n.db.Get(key)
 	if err != nil {
 		return bg, err
 	}
-
-	fmt.Println("before write", n.buf.Len())
 	if _, err = n.buf.Write(b); err != nil {
 		return bg, err
 	}
-	fmt.Println("after write", n.buf.Len())
-	return bg, n.dec.Decode(&bg)
+	dec := gob.NewDecoder(&n.buf)
+	return bg, dec.Decode(&bg)
 }
 
 // Deletes a bug from the nest.
@@ -92,6 +83,7 @@ func (n Nest) NextId() (int64, error) {
 	return ret, nil
 }
 
+// Closes the db.
 func (n Nest) Close() error {
 	return n.db.Close()
 }
@@ -100,6 +92,7 @@ func (n Nest) Fold(fn func(key []byte) error) error {
 	return n.db.Fold(fn)
 }
 
+// Syncs the in-memory db with the disk.
 func (n Nest) sync() {
 	if err := n.db.Sync(); err != nil {
 		log.Println(err)
