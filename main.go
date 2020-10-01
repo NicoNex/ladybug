@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	// "sync"
 )
 
 type Comment struct {
@@ -43,7 +42,11 @@ const (
 
 const MASK = 0b11111111
 
-var nest Nest
+var nest *Nest
+
+func (b Bug) String() string {
+	return fmt.Sprintf("%d %s %s", b.Id, b.Body, b.Author)
+}
 
 // Returns a Response object with the data in input.
 func NewResponse(b *Bug, n []Bug, e error) Response {
@@ -74,20 +77,36 @@ func etos(err error) string {
 	return ""
 }
 
-// Converts an int64 to a [8]byte.
-func itob(a int64) (b [8]byte) {
-	for i := 0; i < 8; i++ {
-		var shift = i * 8
-		b[i] = byte((a & (MASK << shift)) >> shift)
+// Converts an int64 to an array of type [8]byte.
+func itoa(i int64) (a [8]byte) {
+	for j := 0; j < 8; j++ {
+		var shift = j * 8
+		a[j] = byte((i & (MASK << shift)) >> shift)
 	}
 	return
 }
 
-// Converts a [8]byte to int64.
-func btoi(b [8]byte) (i int64) {
+// Converts an array of type [8]byte to int64.
+func atoi(b [8]byte) (i int64) {
 	for k, v := range b {
 		var shift = k * 8
 		i |= int64(v) << shift
+	}
+	return
+}
+
+// Converts an array of type [8]byte to a byte slice.
+func atob(a [8]byte) (b []byte) {
+	for _, v := range a {
+		b = append(b, v)
+	}
+	return
+}
+
+// Converts a bytes slice of len 8 to an array of type [8]byte.
+func btoa(b []byte) (a [8]byte) {
+	if len(b) == 8 {
+		copy(a[:], b[0:8])
 	}
 	return
 }
@@ -130,8 +149,7 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = json.Unmarshal(body, &bug)
-	if err != nil {
+	if err := json.Unmarshal(body, &bug); err != nil {
 		writeResponse(w, nil, err)
 		return
 	}
@@ -143,16 +161,12 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		bug.Id = key
-	} else {
-		if key, err = strconv.ParseInt(id, 10, 64); err != nil {
-			writeResponse(w, nil, err)
-			return
-		}
+	} else if key, err = strconv.ParseInt(id, 10, 64); err != nil {
+		writeResponse(w, nil, err)
+		return
 	}
 
-	raw := itob(key)
-	err = nest.Put(raw[:], bug)
-	if err != nil {
+	if err := nest.Put(atob(itoa(key)), bug); err != nil {
 		writeResponse(w, nil, err)
 		return
 	}
@@ -169,22 +183,18 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, err := nest.Keys()
-	if err != nil {
-		writeResponse(w, nil, err)
-		return
-	}
-
-	for k := range keys {
-		bug, err := nest.Get(k)
-		if err != nil {
-			log.Println(err)
-			continue
+	err := nest.Fold(func(k []byte) error {
+		if string(k) != "id_counter" {
+			bug, err := nest.Get(k) // here it happens the error
+			if err != nil {
+				return err
+			}
+			bugs = append(bugs, bug)
 		}
-		bugs = append(bugs, bug)
-	}
+		return nil
+	})
 
-	writeResponse(w, bugs, nil)
+	writeResponse(w, bugs, err)
 }
 
 // Handles the /del endpoint.
@@ -206,8 +216,7 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	raw := itob(id)
-	err = nest.Delete(raw[:])
+	err = nest.Delete(atob(itoa(id)))
 	if err != nil {
 		writeResponse(w, nil, err)
 		return

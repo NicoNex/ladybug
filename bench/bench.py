@@ -25,7 +25,8 @@ mock = {
 			"text": "Altro mirabolante permesso",
 			"author": "Giuseppe"
 		}
-	]
+	],
+	"author": "NicoNex"
 }
 
 def put_bug(bug: dict) -> int:
@@ -33,8 +34,8 @@ def put_bug(bug: dict) -> int:
 	return resp
 
 start = time.time()
-for i in range(1000):
-	# print(f"Put bug #{i}")
+for i in range(1):
+	print(f"Put bug #{i}")
 	mock["body"] = f"bench_{i}"
 	resp = put_bug(mock)
 	if resp.status_code != 200:

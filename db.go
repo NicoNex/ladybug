@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"log"
-	// "sync"
 
 	"github.com/prologic/bitcask"
 )
@@ -17,90 +17,87 @@ type Nest struct {
 	db  *bitcask.Bitcask
 }
 
-func NewNest(path string) Nest {
+var COUNTER_KEY = []byte("id_counter")
+
+func NewNest(path string) *Nest {
 	db, err := bitcask.Open(path, bitcask.WithSync(true))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var n Nest
-
 	n.enc = gob.NewEncoder(&n.buf)
 	n.dec = gob.NewDecoder(&n.buf)
 	n.db = db
-	return n
+	return &n
 }
 
 // Saves the bug into the nest.
 func (n Nest) Put(key []byte, b Bug) error {
+	// n.enc = gob.NewEncoder(&n.buf) // With this line it works.
 	if err := n.enc.Encode(b); err != nil {
 		return err
 	}
+	fmt.Println("before put", n.buf.Len())
 	err := n.db.Put(key, n.buf.Bytes())
-	// go n.sync()
+	fmt.Println("after put", n.buf.Len())
 	return err
 }
 
 // Retrieves a bug from the nest.
 func (n Nest) Get(key []byte) (Bug, error) {
 	var bg Bug
-
+	// n.dec = gob.NewDecoder(&n.buf) // With this line it works.
 	b, err := n.db.Get(key)
 	if err != nil {
 		return bg, err
 	}
 
+	fmt.Println("before write", n.buf.Len())
 	if _, err = n.buf.Write(b); err != nil {
 		return bg, err
 	}
-
-	err = n.dec.Decode(&bg)
-	return bg, err
+	fmt.Println("after write", n.buf.Len())
+	return bg, n.dec.Decode(&bg)
 }
 
 // Deletes a bug from the nest.
 func (n Nest) Delete(key []byte) error {
-	err := n.db.Delete(key)
-	// go n.sync()
-	return err
+	return n.db.Delete(key)
 }
 
 // Returns all the bugs' keys.
-func (n Nest) Keys() (chan []byte, error) {
-	return n.db.Keys(), nil
+func (n Nest) Keys() chan []byte {
+	return n.db.Keys()
 }
 
 // Returns the next bug id.
 func (n Nest) NextId() (int64, error) {
-	var key = []byte("id_counter")
-
-	if !n.db.Has(key) {
-		go func() {
-			val := itob(0)
-			n.db.Put(key, val[:])
-		}()
+	if !n.db.Has(COUNTER_KEY) {
+		go n.db.Put(COUNTER_KEY, atob(itoa(0)))
 		return 0, nil
 	}
 
-	b, err := n.db.Get(key)
+	b, err := n.db.Get(COUNTER_KEY)
 	if err != nil {
-		return 0, nil
-	}
-
-	var raw [8]byte
-	copy(raw[:], b[0:8])
-	ret := btoi(raw) + 1
-	val := itob(ret)
-	if err = n.db.Put(key, val[:]); err != nil {
 		return 0, err
 	}
 
-	// go n.sync()
+	ret := atoi(btoa(b)) + 1
+	val := atob(itoa(ret))
+	if err = n.db.Put(COUNTER_KEY, val); err != nil {
+		return 0, err
+	}
+
 	return ret, nil
 }
 
 func (n Nest) Close() error {
 	return n.db.Close()
+}
+
+func (n Nest) Fold(fn func(key []byte) error) error {
+	return n.db.Fold(fn)
 }
 
 func (n Nest) sync() {
