@@ -52,7 +52,6 @@ func (n *Nest) Get(key []byte) (Bug, error) {
 	if _, err = n.buf.Write(b); err != nil {
 		return bg, err
 	}
-	// dec := gob.NewDecoder(&n.buf)
 	return bg, n.dec.Decode(&bg)
 }
 
