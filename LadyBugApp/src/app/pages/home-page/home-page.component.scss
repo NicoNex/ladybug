@@ -3,7 +3,7 @@
   float: right;
 }
 
-#menu {
+:host ::ng-deep #menu {
   width: 45px;
   float: left;
 }
@@ -49,7 +49,7 @@
 
 #button-menu {
   height: 100%;
-  width: 50px;
+  width: 44px;
   background: cadetblue;
 }
 

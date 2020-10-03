@@ -8,6 +8,48 @@
   align-items: stretch;
 }
 
+.new-issue {
+    // position: relative;
+    // top: 25%;
+    float: right;
+    margin-left: 15px;
+    margin-bottom: 10px;
+    background-color: cadetblue;
+    // color: cadetblue;
+    // color: black;
+}
+
+#menu {
+    margin-top: 10px;
+}
+
+::ng-deep .nb-theme-dark [nbInput].size-medium {
+  font-size: 0.9375rem;
+  font-weight: 300;
+  line-height: 1.5rem;
+  padding: 0.4375rem 1rem;
+}
+
+.icon-status{
+    color: cadetblue;
+    margin-right: 4px;
+}
+
+::ng-deep .nb-theme-dark [nbButton].appearance-filled.status-primary {
+  background-color: cadetblue;
+  border-color: cadetblue;
+  color: #ffffff;
+}
+
+::ng-deep .nb-theme-dark [nbButton].appearance-filled.status-primary :hover{
+  background-color: cadetblue;
+  border-color: cadetblue;
+  color: #ffffff;
+}
+
+
+
+
 /* width */
 ::-webkit-scrollbar {
     width: 10px;
@@ -15,7 +57,7 @@
   
   /* Track */
   ::-webkit-scrollbar-track {
-    background: #192038;
+    background: #192038; 
     box-shadow: inset 0 0 5px #192018; 
     border-radius: 10px;
   }
@@ -30,3 +72,4 @@
   ::-webkit-scrollbar-thumb:hover {
     background: cadetblue;
   }
+

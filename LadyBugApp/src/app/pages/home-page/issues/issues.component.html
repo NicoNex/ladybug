@@ -6,13 +6,15 @@
         </div>
         <div id="middleside"></div>
         <div id="rightside">
-            <button nbButton style="float: right;" status="info" size="tiny">New Issue</button>
-        </div>
+            <button nbButton class="new-issue" status="primary" size="tiny" (click)="add()">New Issue</button>
+            <button nbButton style="float: right;" status="danger" size="tiny" (click)="delete()">Delete Issue</button>
+        </div> 
       </div>
     </nb-card-header>
     <nb-list>
-      <nb-list-item *ngFor="let fruit of fruits">
-        {{ fruit }}
+      <nb-list-item *ngFor="let bug of bugs">
+        <nb-icon class="icon-status"icon="alert-circle-outline"></nb-icon>
+        {{ bug.id }}
       </nb-list-item>
     </nb-list>
 </nb-card>
