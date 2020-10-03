@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HomePageComponent } from './home-page.component';
-import { NbButtonModule, NbCardModule, NbIconModule, NbInputModule, NbLayoutModule, NbListModule, NbSidebarModule } from '@nebular/theme';
+import { NbButtonModule, NbCardModule, NbCheckboxModule, NbContextMenuModule, NbIconModule, NbInputModule, NbLayoutModule, NbListModule, NbMenuModule, NbSidebarModule } from '@nebular/theme';
 import { NbEvaIconsModule } from '@nebular/eva-icons';
 import { HomePageRoutingModule } from './home-page-routing.module';
 import { IssuesComponent } from './issues/issues.component';
@@ -19,7 +19,10 @@ import { IssuesComponent } from './issues/issues.component';
     HomePageRoutingModule,
     NbListModule,
     NbCardModule,
-    NbInputModule
+    NbInputModule,
+    NbMenuModule.forRoot(),
+    NbContextMenuModule,
+    NbCheckboxModule
   ]
 })
 export class HomePageModule { }

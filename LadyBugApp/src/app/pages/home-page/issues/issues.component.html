@@ -6,15 +6,22 @@
         </div>
         <div id="middleside"></div>
         <div id="rightside">
-            <button nbButton class="new-issue" status="primary" size="tiny" (click)="add()">New Issue</button>
-            <button nbButton style="float: right;" status="danger" size="tiny" (click)="delete()">Delete Issue</button>
+            <button nbButton class="issue open" status="primary" size="tiny" (click)="add()">New Issue</button>
+            <button nbButton class="issue" status="danger" size="tiny" (click)="delete()">Delete Issue</button>
+            <button nbButton class="issue" [nbContextMenu]="items" nbContextMenuTag="choose-context-menu" status="info" size="tiny">Mark as</button>
         </div> 
       </div>
     </nb-card-header>
     <nb-list>
-      <nb-list-item *ngFor="let bug of bugs">
-        <nb-icon class="icon-status"icon="alert-circle-outline"></nb-icon>
-        {{ bug.id }}
+      <nb-list-item *ngFor="let item of bugItems; let index = index; trackBy: trackByFn">
+        <nb-checkbox  class="icon-status-open" status="basic" style="margin-right: 5px;" (checkedChange)="toggle($event, index)"></nb-checkbox>
+        <ng-container *ngIf="item.bug.open; else notOpen">
+          <nb-icon class="icon-status-open"icon="alert-circle-outline"></nb-icon>
+        </ng-container>
+        <ng-template #notOpen>
+          <nb-icon class="icon-status-closed"icon="checkmark-circle-2-outline"></nb-icon>
+        </ng-template>
+        {{ item.bug.id }}
       </nb-list-item>
     </nb-list>
 </nb-card>

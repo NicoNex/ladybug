@@ -4,9 +4,9 @@ export class BugData {
     private static bug1 = new Bug(
         {
             
-            id: "cazziIdMock",
+            id: "buggone1",
             body: "il mio fantastico bug",
-            open: true,
+            open: false,
             tags: [
                 "font-end",
                 "back-end",
@@ -33,7 +33,7 @@ export class BugData {
     private static bug2 = new Bug(
         {
             
-            id: "cazziIdMock",
+            id: "buggo",
             body: "il mio fantastico bug",
             open: true,
             tags: [
@@ -62,7 +62,7 @@ export class BugData {
     private static bug3 = new Bug(
         {
             
-            id: "cazziIdMock",
+            id: "buggopiuomeno",
             body: "il mio fantastico bug",
             open: true,
             tags: [
@@ -91,9 +91,9 @@ export class BugData {
     private static bug4 = new Bug(
         {
             
-            id: "cazziIdMock",
+            id: "giocoaterrraria",
             body: "il mio fantastico bug",
-            open: true,
+            open: false,
             tags: [
                 "font-end",
                 "back-end",
@@ -120,7 +120,7 @@ export class BugData {
     private static bug5 = new Bug(
         {
             
-            id: "cazziIdMock",
+            id: "gesu",
             body: "il mio fantastico bug",
             open: true,
             tags: [

@@ -8,15 +8,14 @@
   align-items: stretch;
 }
 
-.new-issue {
-    // position: relative;
-    // top: 25%;
+.issue {
     float: right;
     margin-left: 15px;
     margin-bottom: 10px;
-    background-color: cadetblue;
-    // color: cadetblue;
-    // color: black;
+}
+
+.issue .open {
+  background-color: cadetblue;
 }
 
 #menu {
@@ -30,10 +29,17 @@
   padding: 0.4375rem 1rem;
 }
 
-.icon-status{
+.icon-status-open{
     color: cadetblue;
     margin-right: 4px;
 }
+
+.icon-status-closed {
+  color: greenyellow; 
+  margin-right: 4px;
+}
+
+
 
 ::ng-deep .nb-theme-dark [nbButton].appearance-filled.status-primary {
   background-color: cadetblue;
