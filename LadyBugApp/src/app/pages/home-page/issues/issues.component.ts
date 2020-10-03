@@ -25,6 +25,7 @@ export class IssuesComponent implements OnInit {
 
   bugs: Array<Bug> = BugData.BUG_LIST;
   bugItems: Array<IssueCheckBox> = new Array<IssueCheckBox>();
+  // tags: Array<string> = new Array<string>();
   items = [{ title: 'Open' }, { title: 'Close' }];
   checked = false;
 
@@ -43,6 +44,7 @@ export class IssuesComponent implements OnInit {
       }
       this.bugItems.push(issue);
     });
+    
   }
 
   menuService(): void {
@@ -71,19 +73,43 @@ export class IssuesComponent implements OnInit {
  }
 
   delete(): void {
-    this.bugs.splice(0,1);
+    this.bugItems.forEach((item, index) => {if (item.toggle === true){ console.log(index);this.bugItems.splice(index, 1)}});
+    console.log(this.bugItems);
   }
 
   add(): void {
-    this.bugs.push(BugData.BUG_LIST[1]);
+    let newbug: IssueCheckBox = {
+      bug: BugData.BUG_LIST[0],
+      toggle: false
+    }
+    newbug.bug.open = true;
+    this.bugItems.push(newbug);
   }
 
-  toggle(checked: boolean, index: number) { 
+  toggle(checked: boolean, index: number): void { 
     this.bugItems[index].toggle = checked;
     console.log('CHECKED', this.bugItems[index].toggle, "INDEX", index);
+    console.log(this.bugItems);
   }
 
-  
+  showButtons(): boolean {
+    return this.bugItems.some(item => item.toggle === true);
+  }
+
+  setTagStatus(tag: string): string {
+    switch(tag){
+      case 'front-end':
+        return 'primary';
+      case 'back-end':
+        return 'success';
+      case 'angular':
+        return 'info';
+      case 'cazzi-magici':
+        return 'warning';
+    }
+  }
+
+
 
   closeBug(): void {
 

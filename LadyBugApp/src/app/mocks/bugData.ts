@@ -8,7 +8,7 @@ export class BugData {
             body: "il mio fantastico bug",
             open: false,
             tags: [
-                "font-end",
+                "front-end",
                 "back-end",
                 "angular",
                 "cazzi-magici"
@@ -37,7 +37,7 @@ export class BugData {
             body: "il mio fantastico bug",
             open: true,
             tags: [
-                "font-end",
+                "front-end",
                 "back-end",
                 "angular",
                 "cazzi-magici"
@@ -66,7 +66,7 @@ export class BugData {
             body: "il mio fantastico bug",
             open: true,
             tags: [
-                "font-end",
+                "front-end",
                 "back-end",
                 "angular",
                 "cazzi-magici"
@@ -95,7 +95,7 @@ export class BugData {
             body: "il mio fantastico bug",
             open: false,
             tags: [
-                "font-end",
+                "front-end",
                 "back-end",
                 "angular",
                 "cazzi-magici"
@@ -124,7 +124,7 @@ export class BugData {
             body: "il mio fantastico bug",
             open: true,
             tags: [
-                "font-end",
+                "front-end",
                 "back-end",
                 "angular",
                 "cazzi-magici"

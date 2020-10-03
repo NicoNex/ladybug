@@ -7,8 +7,10 @@
         <div id="middleside"></div>
         <div id="rightside">
             <button nbButton class="issue open" status="primary" size="tiny" (click)="add()">New Issue</button>
-            <button nbButton class="issue" status="danger" size="tiny" (click)="delete()">Delete Issue</button>
-            <button nbButton class="issue" [nbContextMenu]="items" nbContextMenuTag="choose-context-menu" status="info" size="tiny">Mark as</button>
+            <ng-container *ngIf="showButtons()">
+              <button nbButton class="issue" status="danger" size="tiny" (click)="delete()">Delete Issue</button>
+              <button nbButton class="issue" [nbContextMenu]="items" nbContextMenuTag="choose-context-menu" status="info" size="tiny">Mark as</button>
+            </ng-container>
         </div> 
       </div>
     </nb-card-header>
@@ -22,6 +24,9 @@
           <nb-icon class="icon-status-closed"icon="checkmark-circle-2-outline"></nb-icon>
         </ng-template>
         {{ item.bug.id }}
+        <ng-container *ngFor="let tag of item.bug.tags">
+          <button nbButton shape="round" size="tiny" [status]="setTagStatus(tag)" style="margin-left: 10px;">{{tag}}</button>
+        </ng-container>
       </nb-list-item>
     </nb-list>
 </nb-card>
