@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BugData } from '../mocks/bugData';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { observable, Observable } from 'rxjs';
 import { Bug } from '../Model/entities/Bug';
 import { environment } from 'src/environments/environment';
 
@@ -20,5 +20,16 @@ export class IssueService {
         observer.complete();
       });
     }
+  }
+
+  putBug(bug: Bug): Observable<any> {
+    return new Observable((observer) => {
+      BugData.BUG_LIST.push(bug);
+      const response: any = {
+        'ok': true
+      };
+      observer.next(response);
+      observer.complete();
+    });
   }
 }

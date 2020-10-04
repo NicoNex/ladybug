@@ -42,7 +42,7 @@ export class IssuesComponent implements OnInit {
         this.bugItems = this.bugToIssueCheckBox(bugs);
       }
     );
-    
+    console.log(this.bugItems)
   }
 
   menuService(): void {

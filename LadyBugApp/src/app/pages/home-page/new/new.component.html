@@ -4,7 +4,7 @@
     <nb-card-body>
         <form [formGroup]="issueForm">
         <div class="form-group">
-            <input type="text" nbInput fullWidth placeholder="Title" formControlName="title">
+            <input type="text" nbInput fullWidth placeholder="Description" formControlName="description">
         </div>
         <div class="form-group">
             <input type="text" nbInput fullWidth placeholder="Author" (ngModelChange)="test()" formControlName="author">
@@ -17,12 +17,12 @@
             <span>Tags*</span>
         </div>
         <div class="validation-checkboxes">
-            <nb-checkbox status="primary">Front-end</nb-checkbox>
-            <nb-checkbox status="success">Back-end</nb-checkbox>
-            <nb-checkbox status="info">Angular</nb-checkbox>
-            <nb-checkbox status="warning">Cazzi-magici</nb-checkbox>
+            <nb-checkbox status="primary" (checkedChange)="toggle($event, 'front-end')">Front-end</nb-checkbox>
+            <nb-checkbox status="success" (checkedChange)="toggle($event, 'back-end')">Back-end</nb-checkbox>
+            <nb-checkbox status="info" (checkedChange)="toggle($event, 'angular')">Angular</nb-checkbox>
+            <nb-checkbox status="warning" (checkedChange)="toggle($event, 'cazzi-magici')">Cazzi-magici</nb-checkbox>
           </div>
-        <button type="submit" style="float: right;" nbButton status="success" [disabled]="!issueForm.valid">Send</button>
+        <button type="submit" style="float: right;" nbButton status="success" [disabled]="!issueForm.valid && this.newBug.tags.length === 0" (click)="save()">Send</button>
     </nb-card-body>
 
     
