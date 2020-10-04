@@ -5,13 +5,15 @@ import { NbButtonModule, NbCardModule, NbCheckboxModule, NbContextMenuModule, Nb
 import { NbEvaIconsModule } from '@nebular/eva-icons';
 import { HomePageRoutingModule } from './home-page-routing.module';
 import { IssuesComponent } from './issues/issues.component';
-import { NewIssueComponent } from './issues/new-issue/new-issue.component';
+import { NewComponent } from './new/new.component';
+import { IssueModule } from './issues/issue.module';
+import { NewModule } from './new/new.module';
 
 
 
 
 @NgModule({
-  declarations: [HomePageComponent, IssuesComponent, NewIssueComponent],
+  declarations: [HomePageComponent, IssuesComponent, NewComponent],
   imports: [
     CommonModule,
     NbLayoutModule,
@@ -26,6 +28,8 @@ import { NewIssueComponent } from './issues/new-issue/new-issue.component';
     NbMenuModule.forRoot(),
     NbContextMenuModule,
     NbCheckboxModule,
+    IssueModule,
+    NewModule
   ]
 })
 export class HomePageModule { }
