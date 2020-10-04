@@ -8,6 +8,7 @@ import { IssuesComponent } from './issues/issues.component';
 import { NewComponent } from './new/new.component';
 import { IssueModule } from './issues/issue.module';
 import { NewModule } from './new/new.module';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 
 
@@ -29,7 +30,9 @@ import { NewModule } from './new/new.module';
     NbContextMenuModule,
     NbCheckboxModule,
     IssueModule,
-    NewModule
+    NewModule,
+    ReactiveFormsModule,
+    FormsModule
   ]
 })
 export class HomePageModule { }

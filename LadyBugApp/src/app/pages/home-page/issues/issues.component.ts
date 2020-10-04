@@ -84,7 +84,6 @@ export class IssuesComponent implements OnInit {
 
   newIssue(): void {
     this.router.navigate(['home/new']);
-    console.log('NONVA');
   }
 
   delete(): void {
@@ -122,13 +121,5 @@ export class IssuesComponent implements OnInit {
         return 'warning';
     }
   }
-
-
-
-  closeBug(): void {
-
-  }
-
-  
 
 }

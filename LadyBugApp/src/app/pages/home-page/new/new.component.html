@@ -1,1 +1,29 @@
-<p>new works!</p>
+
+<nb-card>
+    <nb-card-header>New Issue</nb-card-header>
+    <nb-card-body>
+        <form [formGroup]="issueForm">
+        <div class="form-group">
+            <input type="text" nbInput fullWidth placeholder="Title" formControlName="title">
+        </div>
+        <div class="form-group">
+            <input type="text" nbInput fullWidth placeholder="Author" (ngModelChange)="test()" formControlName="author">
+        </div>
+        <div class="form-group">
+            <textarea style="resize: vertical; min-height: 70px;" nbInput fullWidth placeholder="Comment" formControlName="comment"></textarea>
+        </div>
+        </form>
+        <div class="form-group">
+            <span>Tags*</span>
+        </div>
+        <div class="validation-checkboxes">
+            <nb-checkbox status="primary">Front-end</nb-checkbox>
+            <nb-checkbox status="success">Back-end</nb-checkbox>
+            <nb-checkbox status="info">Angular</nb-checkbox>
+            <nb-checkbox status="warning">Cazzi-magici</nb-checkbox>
+          </div>
+        <button type="submit" style="float: right;" nbButton status="success" [disabled]="!issueForm.valid">Send</button>
+    </nb-card-body>
+
+    
+</nb-card>
