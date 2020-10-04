@@ -5,7 +5,7 @@ export class BugData {
         {
             
             id: "buggone1",
-            body: "il mio fantastico bug",
+            body: "primno bug",
             open: false,
             tags: [
                 "front-end",
@@ -34,7 +34,7 @@ export class BugData {
         {
             
             id: "buggo",
-            body: "il mio fantastico bug",
+            body: "secondo buggg",
             open: true,
             tags: [
                 "front-end",
@@ -63,7 +63,7 @@ export class BugData {
         {
             
             id: "buggopiuomeno",
-            body: "il mio fantastico bug",
+            body: "terzobugfgoine",
             open: true,
             tags: [
                 "front-end",
@@ -92,7 +92,7 @@ export class BugData {
         {
             
             id: "giocoaterrraria",
-            body: "il mio fantastico bug",
+            body: "superbuggone",
             open: false,
             tags: [
                 "front-end",
@@ -121,7 +121,7 @@ export class BugData {
         {
             
             id: "gesu",
-            body: "il mio fantastico bug",
+            body: "wewe",
             open: true,
             tags: [
                 "front-end",

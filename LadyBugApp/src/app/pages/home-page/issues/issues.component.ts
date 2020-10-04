@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Bug } from 'src/app/Model/entities/Bug';
-import { Issue } from 'src/app/model/entities/Issue';
-import { IssueData } from '../../../mocks/IssueData';
 import { BugData } from '../../../mocks/bugData';
 import { NbMenuService } from '@nebular/theme';
 import { map, filter } from 'rxjs/operators';
+import { IssueService } from 'src/app/services/issue.service';
+import { Router } from '@angular/router';
 
 interface IssueCheckBox {
   bug: Bug;
@@ -29,7 +29,7 @@ export class IssuesComponent implements OnInit {
   items = [{ title: 'Open' }, { title: 'Close' }];
   checked = false;
 
-  constructor(private nbMenuService: NbMenuService) { }
+  constructor(private issueService: IssueService, private nbMenuService: NbMenuService, private router: Router) { }
 
   ngOnInit(): void {
     this.init();
@@ -37,13 +37,11 @@ export class IssuesComponent implements OnInit {
   }
 
   private init(): void {
-    this.bugs.forEach((b) => {
-      const issue: IssueCheckBox = {
-        bug: new Bug(b),
-        toggle: false
+    this.issueService.getBugs().subscribe(
+      (bugs: Bug[]) => {
+        this.bugItems = this.bugToIssueCheckBox(bugs);
       }
-      this.bugItems.push(issue);
-    });
+    );
     
   }
 
@@ -72,8 +70,25 @@ export class IssuesComponent implements OnInit {
     return item.id; 
  }
 
+  private bugToIssueCheckBox(bugs: Bug[]): IssueCheckBox[] {
+    const myNewBugs: IssueCheckBox[] = [];
+    bugs.forEach((bug) => {
+      const issue: IssueCheckBox = {
+        bug: new Bug(bug),
+        toggle: false
+      }
+      myNewBugs.push(issue)
+    });
+    return myNewBugs;
+  }
+
+  newIssue(): void {
+    this.router.navigate(['home/new']);
+    console.log('NONVA');
+  }
+
   delete(): void {
-    this.bugItems.forEach((item, index) => {if (item.toggle === true){ console.log(index);this.bugItems.splice(index, 1)}});
+    this.bugItems = this.bugItems.filter((item) => item.toggle !== true);
     console.log(this.bugItems);
   }
 
@@ -89,7 +104,6 @@ export class IssuesComponent implements OnInit {
   toggle(checked: boolean, index: number): void { 
     this.bugItems[index].toggle = checked;
     console.log('CHECKED', this.bugItems[index].toggle, "INDEX", index);
-    console.log(this.bugItems);
   }
 
   showButtons(): boolean {

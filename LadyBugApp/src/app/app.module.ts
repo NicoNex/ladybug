@@ -6,8 +6,7 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NbThemeModule, NbLayoutModule, NbSidebarModule, NbButtonModule, NbIconComponent, NbIconModule } from '@nebular/theme';
 import { NbEvaIconsModule } from '@nebular/eva-icons';
-import { RouterModule } from '@angular/router';
-import { HomePageComponent } from './pages/home-page/home-page.component';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -22,7 +21,8 @@ import { HomePageComponent } from './pages/home-page/home-page.component';
     NbEvaIconsModule,
     NbSidebarModule.forRoot(), // if this is your app.module
     NbButtonModule,
-    NbIconModule
+    NbIconModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]
