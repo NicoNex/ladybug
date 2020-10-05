@@ -18,11 +18,11 @@ type Nest struct {
 
 var COUNTER_KEY = []byte("id_counter")
 
-// Returns the slice of bytes resulting from the conversion from an int64.
+// Returns the slice of bytes resulting from the conversion of an int64.
 func itosl(i int64) (sl []byte) {
 	for j := 0; j < 8; j++ {
 		shift := j * 8
-		sl = append(sl, byte(i & (MASK << shift) >> shift))
+		sl = append(sl, byte(i&(MASK<<shift)>>shift))
 	}
 	return
 }
@@ -30,7 +30,7 @@ func itosl(i int64) (sl []byte) {
 // Returns the int64 obtained from the byte slice given in input.
 func sltoi(sl []byte) (i int64) {
 	if len(sl) != 8 {
-		log.Println("Invalid ID slice.")
+		log.Printf("Invalid ID slice '%v'.\n", sl)
 		return
 	}
 	for j, v := range sl {
@@ -111,6 +111,9 @@ func (n Nest) Close() error {
 	return n.db.Close()
 }
 
+// Fold iterates over all keys in the database calling the function `fn` for
+// each key. If the function returns an error, no further keys are processed
+// and the error returned.
 func (n Nest) Fold(fn func(key []byte) error) error {
 	return n.db.Fold(fn)
 }
