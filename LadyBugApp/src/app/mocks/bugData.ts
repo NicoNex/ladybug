@@ -4,7 +4,7 @@ export class BugData {
     private static bug1 = new Bug(
         {
             
-            id: "buggone1",
+            id:9,
             body: "primno bug",
             open: false,
             tags: [
@@ -13,15 +13,15 @@ export class BugData {
                 "angular",
                 "cazzi-magici"
             ],
-            date: new Date(),
+            date: Math.round(new Date().getTime() / 1000),
             comments: [
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "il mio mirabolante commento",
                     author: "NicoNex"
                 },
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "Altro mirabolante permesso",
                     author: "Giuseppe"
                 }
@@ -33,7 +33,7 @@ export class BugData {
     private static bug2 = new Bug(
         {
             
-            id: "buggo",
+            id: 7,
             body: "secondo buggg",
             open: true,
             tags: [
@@ -42,15 +42,15 @@ export class BugData {
                 "angular",
                 "cazzi-magici"
             ],
-            date: new Date(),
+            date: Math.round(new Date().getTime() / 1000),
             comments: [
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "il mio mirabolante commento",
                     author: "NicoNex"
                 },
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "Altro mirabolante permesso",
                     author: "Giuseppe"
                 }
@@ -62,7 +62,7 @@ export class BugData {
     private static bug3 = new Bug(
         {
             
-            id: "buggopiuomeno",
+            id: 4,
             body: "terzobugfgoine",
             open: true,
             tags: [
@@ -71,15 +71,15 @@ export class BugData {
                 "angular",
                 "cazzi-magici"
             ],
-            date: new Date(),
+            date: Math.round(new Date().getTime() / 1000),
             comments: [
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "il mio mirabolante commento",
                     author: "NicoNex"
                 },
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "Altro mirabolante permesso",
                     author: "Giuseppe"
                 }
@@ -91,7 +91,7 @@ export class BugData {
     private static bug4 = new Bug(
         {
             
-            id: "giocoaterrraria",
+            id: 1,
             body: "superbuggone",
             open: false,
             tags: [
@@ -100,15 +100,15 @@ export class BugData {
                 "angular",
                 "cazzi-magici"
             ],
-            date: new Date(),
+            date: Math.round(new Date().getTime() / 1000),
             comments: [
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "il mio mirabolante commento",
                     author: "NicoNex"
                 },
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "Altro mirabolante permesso",
                     author: "Giuseppe"
                 }
@@ -120,7 +120,7 @@ export class BugData {
     private static bug5 = new Bug(
         {
             
-            id: "gesu",
+            id: 0,
             body: "wewe",
             open: true,
             tags: [
@@ -129,15 +129,15 @@ export class BugData {
                 "angular",
                 "cazzi-magici"
             ],
-            date: new Date(),
+            date: Math.round(new Date().getTime() / 1000),
             comments: [
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "il mio mirabolante commento",
                     author: "NicoNex"
                 },
                 {
-                    date: new Date(),
+                    date: Math.round(new Date().getTime() / 1000),
                     text: "Altro mirabolante permesso",
                     author: "Giuseppe"
                 }

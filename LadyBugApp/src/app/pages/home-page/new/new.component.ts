@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Bug } from 'src/app/Model/entities/Bug';
 import { Comment } from 'src/app/Model/entities/Comment';
@@ -15,7 +15,6 @@ export class NewComponent implements OnInit {
   description: FormControl;
   author: FormControl;
   comment: FormControl;
-  tags: FormControl;
   newBug: Bug;
 
   constructor(private issueService: IssueService, private router: Router) { }
@@ -23,10 +22,10 @@ export class NewComponent implements OnInit {
   ngOnInit(): void {
     this.newBug = new Bug(
       {
-        id: '',
+        id: 10,
           open: true,
           tags: new Array<string>(),
-          date: new Date(),
+          date: Math.round(new Date().getTime() / 1000),
           comments: new Array<Comment>()
       }
     );
@@ -37,8 +36,13 @@ export class NewComponent implements OnInit {
     this.issueForm = new FormGroup({
       description: new FormControl('', [Validators.required]),
       author: new FormControl('', [Validators.required]),
-      comment: new FormControl('', [Validators.required])
+      comment: new FormControl('', [Validators.required]),
+      tags: new FormArray([])
     });
+  }
+
+  get tags() {
+    return this.issueForm.get('tags') as FormArray;
   }
 
   test(): void {
@@ -52,7 +56,7 @@ export class NewComponent implements OnInit {
     } else if(this.newBug.tags.includes(type)) {
       this.newBug.tags.splice(this.newBug.tags.indexOf(type), 1);
     }
-    console.log(this.newBug.tags.length);
+    console.log(this.newBug.tags);
     console.log(this.issueForm.valid);
   }
 
@@ -62,7 +66,7 @@ export class NewComponent implements OnInit {
     this.newBug.comments.push(
       new Comment({
         author: this.issueForm.get('author').value,
-        date: new Date(),
+        date: Math.round(new Date().getTime() / 1000),
         text: this.issueForm.get('comment').value
       }));
 

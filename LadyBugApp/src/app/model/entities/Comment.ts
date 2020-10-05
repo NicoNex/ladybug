@@ -1,7 +1,7 @@
 import { IComment } from '../interfaces/IComment';
 
 export class Comment implements IComment {
-     date?: Date;
+     date?: number;
      text?: string;
      author?: string;
 

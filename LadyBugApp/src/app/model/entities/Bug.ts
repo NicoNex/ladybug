@@ -2,11 +2,11 @@ import { IBug } from '../interfaces/IBug';
 import { Comment } from './Comment';
 
 export class Bug implements IBug {
-    id?: string;
+    id?: number;
     body?: string;
     open?: boolean;
     tags?: Array<string>;
-    date?: Date;
+    date?: number;
     comments?: Array<Comment>;
 
 

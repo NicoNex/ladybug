@@ -1,10 +1,10 @@
 import { IComment } from './IComment';
 
 export interface IBug {
-    id?: string;
+    id?: number;
     body?: string;
     open?: boolean;
     tags?: Array<string>;
-    date?: Date;
+    date?: number;
     comments?: Array<IComment>;
 }

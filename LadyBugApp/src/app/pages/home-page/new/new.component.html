@@ -16,13 +16,20 @@
         <div class="form-group">
             <span>Tags*</span>
         </div>
-        <div class="validation-checkboxes">
+         <div class="validation-checkboxes">
             <nb-checkbox status="primary" (checkedChange)="toggle($event, 'front-end')">Front-end</nb-checkbox>
             <nb-checkbox status="success" (checkedChange)="toggle($event, 'back-end')">Back-end</nb-checkbox>
             <nb-checkbox status="info" (checkedChange)="toggle($event, 'angular')">Angular</nb-checkbox>
             <nb-checkbox status="warning" (checkedChange)="toggle($event, 'cazzi-magici')">Cazzi-magici</nb-checkbox>
-          </div>
-        <button type="submit" style="float: right;" nbButton status="success" [disabled]="!issueForm.valid && this.newBug.tags.length === 0" (click)="save()">Send</button>
+        </div>
+        <!-- <ng-container formArrayName="tags">
+            <div *ngFor="let tag of tags.controls">
+
+            </div>
+        </ng-container>-->
+        
+        
+        <button type="submit" style="float: right;" nbButton status="success" [disabled]="!issueForm.valid" (click)="save()">Send</button>
     </nb-card-body>
 
     
