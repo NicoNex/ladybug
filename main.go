@@ -21,7 +21,7 @@ type Comment struct {
 type Bug struct {
 	Id       int64     `json:"id"`
 	Body     string    `json:"body"`
-	Open     bool      `json:"is_open"`
+	Open     bool      `json:"open"`
 	Tags     []string  `json:"tags"`
 	Date     int64     `json:"date"`
 	Comments []Comment `json:"comments"`
