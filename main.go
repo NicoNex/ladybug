@@ -32,7 +32,7 @@ type Response struct {
 	Ok   bool   `json:"ok"`
 	Err  string `json:"err,omitempty"`
 	Bug  *Bug   `json:"bug,omitempty"`
-	Nest []Bug  `json:"nest,omitempty"`
+	Bugs []Bug  `json:"bugs,omitempty"`
 }
 
 const (
@@ -54,7 +54,7 @@ func NewResponse(b *Bug, n []Bug, e error) Response {
 		Ok:   e == nil,
 		Err:  etos(e),
 		Bug:  b,
-		Nest: n,
+		Bugs: n,
 	}
 }
 
