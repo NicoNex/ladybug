@@ -18,6 +18,28 @@ type Nest struct {
 
 var COUNTER_KEY = []byte("id_counter")
 
+// Returns the slice of bytes resulting from the conversion of an int64.
+func itosl(i int64) (sl []byte) {
+	for j := 0; j < 8; j++ {
+		shift := j * 8
+		sl = append(sl, byte(i&(MASK<<shift)>>shift))
+	}
+	return
+}
+
+// Returns the int64 obtained from the byte slice given in input.
+func sltoi(sl []byte) (i int64) {
+	if len(sl) != 8 {
+		log.Printf("Invalid ID slice '%v'.\n", sl)
+		return
+	}
+	for j, v := range sl {
+		shift := j * 8
+		i |= int64(v) << shift
+	}
+	return
+}
+
 func NewNest(path string) *Nest {
 	db, err := bitcask.Open(path, bitcask.WithSync(true))
 	if err != nil {
@@ -32,20 +54,20 @@ func NewNest(path string) *Nest {
 }
 
 // Saves the bug into the nest.
-func (n *Nest) Put(key []byte, b Bug) error {
+func (n *Nest) Put(id int64, b Bug) error {
 	defer n.buf.Reset()
 	if err := n.enc.Encode(b); err != nil {
 		return err
 	}
-	return n.db.Put(key, n.buf.Bytes())
+	return n.db.Put(itosl(id), n.buf.Bytes())
 }
 
 // Retrieves a bug from the nest.
-func (n *Nest) Get(key []byte) (Bug, error) {
+func (n *Nest) Get(id int64) (Bug, error) {
 	defer n.buf.Reset()
 	var bg Bug
 
-	b, err := n.db.Get(key)
+	b, err := n.db.Get(itosl(id))
 	if err != nil {
 		return bg, err
 	}
@@ -56,8 +78,8 @@ func (n *Nest) Get(key []byte) (Bug, error) {
 }
 
 // Deletes a bug from the nest.
-func (n Nest) Delete(key []byte) error {
-	return n.db.Delete(key)
+func (n Nest) Delete(id int64) error {
+	return n.db.Delete(itosl(id))
 }
 
 // Returns all the bugs' keys.
@@ -68,7 +90,7 @@ func (n Nest) Keys() chan []byte {
 // Returns the next bug id.
 func (n Nest) NextId() (int64, error) {
 	if !n.db.Has(COUNTER_KEY) {
-		go n.db.Put(COUNTER_KEY, atob(itoa(0)))
+		go n.db.Put(COUNTER_KEY, itosl(0))
 		return 0, nil
 	}
 
@@ -77,13 +99,11 @@ func (n Nest) NextId() (int64, error) {
 		return 0, err
 	}
 
-	ret := atoi(btoa(b)) + 1
-	val := atob(itoa(ret))
-	if err = n.db.Put(COUNTER_KEY, val); err != nil {
+	id := sltoi(b) + 1
+	if err = n.db.Put(COUNTER_KEY, itosl(id)); err != nil {
 		return 0, err
 	}
-
-	return ret, nil
+	return id, nil
 }
 
 // Closes the db.
@@ -91,6 +111,9 @@ func (n Nest) Close() error {
 	return n.db.Close()
 }
 
+// Fold iterates over all keys in the database calling the function `fn` for
+// each key. If the function returns an error, no further keys are processed
+// and the error returned.
 func (n Nest) Fold(fn func(key []byte) error) error {
 	return n.db.Fold(fn)
 }

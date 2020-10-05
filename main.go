@@ -77,40 +77,6 @@ func etos(err error) string {
 	return ""
 }
 
-// Converts an int64 to an array of type [8]byte.
-func itoa(i int64) (a [8]byte) {
-	for j := 0; j < 8; j++ {
-		var shift = j * 8
-		a[j] = byte((i & (MASK << shift)) >> shift)
-	}
-	return
-}
-
-// Converts an array of type [8]byte to int64.
-func atoi(b [8]byte) (i int64) {
-	for k, v := range b {
-		var shift = k * 8
-		i |= int64(v) << shift
-	}
-	return
-}
-
-// Converts an array of type [8]byte to a byte slice.
-func atob(a [8]byte) (b []byte) {
-	for _, v := range a {
-		b = append(b, v)
-	}
-	return
-}
-
-// Converts a bytes slice of len 8 to an array of type [8]byte.
-func btoa(b []byte) (a [8]byte) {
-	if len(b) == 8 {
-		copy(a[:], b[0:8])
-	}
-	return
-}
-
 // Returns the value of an url raw query or error if missing.
 func getQuery(name string, rawQuery string) (string, error) {
 	for _, q := range strings.Split(rawQuery, "&") {
@@ -155,6 +121,8 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, err := getQuery("id", r.URL.RawQuery)
+	// If the error is not nil it means the bug doesn't exist yet, thus needs to
+	// be created.
 	if err != nil {
 		if key, err = nest.NextId(); err != nil {
 			writeResponse(w, nil, err)
@@ -166,7 +134,7 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := nest.Put(atob(itoa(key)), bug); err != nil {
+	if err := nest.Put(key, bug); err != nil {
 		writeResponse(w, nil, err)
 		return
 	}
@@ -185,7 +153,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := nest.Fold(func(k []byte) error {
 		if string(k) != "id_counter" {
-			bug, err := nest.Get(k)
+			bug, err := nest.Get(sltoi(k))
 			if err != nil {
 				return err
 			}
@@ -216,7 +184,7 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = nest.Delete(atob(itoa(id)))
+	err = nest.Delete(id)
 	if err != nil {
 		writeResponse(w, nil, err)
 		return
