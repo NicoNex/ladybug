@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"log"
+	"sync"
 
 	"github.com/prologic/bitcask"
 )
@@ -14,6 +15,7 @@ type Nest struct {
 	dec *gob.Decoder
 	enc *gob.Encoder
 	db  *bitcask.Bitcask
+	mu  sync.Mutex
 }
 
 var COUNTER_KEY = []byte("id_counter")
@@ -50,30 +52,35 @@ func NewNest(path string) *Nest {
 	n.dec = gob.NewDecoder(&n.buf)
 	n.enc = gob.NewEncoder(&n.buf)
 	n.db = db
+
 	return &n
 }
 
 // Saves the bug into the nest.
 func (n *Nest) Put(id int64, b Bug) error {
-	defer n.buf.Reset()
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	if err := n.enc.Encode(b); err != nil {
 		return err
 	}
+	defer n.buf.Reset()
 	return n.db.Put(itosl(id), n.buf.Bytes())
 }
 
 // Retrieves a bug from the nest.
 func (n *Nest) Get(id int64) (Bug, error) {
-	defer n.buf.Reset()
 	var bg Bug
 
 	b, err := n.db.Get(itosl(id))
 	if err != nil {
 		return bg, err
 	}
+	n.mu.Lock()
+	defer n.mu.Unlock()
 	if _, err = n.buf.Write(b); err != nil {
 		return bg, err
 	}
+	defer n.buf.Reset()
 	return bg, n.dec.Decode(&bg)
 }
 
