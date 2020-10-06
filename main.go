@@ -196,7 +196,7 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	var port string
 
-	flag.StringVar(&port, "-p", "8080", "Specify the port to use.")
+	flag.StringVar(&port, "p", "8080", "Specify the port to use.")
 	flag.Parse()
 
 	http.HandleFunc("/put", putHandler)
