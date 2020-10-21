@@ -15,7 +15,7 @@ type Nest struct {
 	dec *gob.Decoder
 	enc *gob.Encoder
 	db  *bitcask.Bitcask
-	mu  sync.Mutex
+	sync.Mutex
 }
 
 var COUNTER_KEY = []byte("id_counter")
@@ -58,8 +58,8 @@ func NewNest(path string) *Nest {
 
 // Saves the bug into the nest.
 func (n *Nest) Put(id int64, b Bug) error {
-	n.mu.Lock()
-	defer n.mu.Unlock()
+	n.Lock()
+	defer n.Unlock()
 	if err := n.enc.Encode(b); err != nil {
 		return err
 	}
@@ -75,8 +75,8 @@ func (n *Nest) Get(id int64) (Bug, error) {
 	if err != nil {
 		return bg, err
 	}
-	n.mu.Lock()
-	defer n.mu.Unlock()
+	n.Lock()
+	defer n.Unlock()
 	if _, err = n.buf.Write(b); err != nil {
 		return bg, err
 	}
@@ -97,7 +97,7 @@ func (n Nest) Keys() chan []byte {
 // Returns the next bug id.
 func (n Nest) NextId() (int64, error) {
 	if !n.db.Has(COUNTER_KEY) {
-		go n.db.Put(COUNTER_KEY, itosl(0))
+		n.db.Put(COUNTER_KEY, itosl(0))
 		return 0, nil
 	}
 

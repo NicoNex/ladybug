@@ -60,8 +60,7 @@ func NewResponse(b *Bug, n []Bug, e error) Response {
 
 // Returns the JSON of a new Response object with the data in input.
 func NewResponseJson(b *Bug, n []Bug, e error) []byte {
-	resp := NewResponse(b, n, e)
-	j, err := json.Marshal(resp)
+	j, err := json.Marshal(NewResponse(b, n, e))
 	if err != nil {
 		log.Println(err)
 	}
@@ -70,9 +69,9 @@ func NewResponseJson(b *Bug, n []Bug, e error) []byte {
 
 // Returns the string containing the error mesage or an empty string if the
 // error is nil.
-func etos(err error) string {
-	if err != nil {
-		return err.Error()
+func etos(e error) string {
+	if e != nil {
+		return e.Error()
 	}
 	return ""
 }
