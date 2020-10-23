@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -28,11 +27,32 @@ type Bug struct {
 	Author   string    `json:"author"`
 }
 
+func (b Bug) String() string {
+	return fmt.Sprintf("%d %s %s", b.Id, b.Body, b.Author)
+}
+
 type Response struct {
 	Ok   bool   `json:"ok"`
 	Err  string `json:"err,omitempty"`
 	Bug  *Bug   `json:"bug,omitempty"`
 	Bugs []Bug  `json:"bugs,omitempty"`
+}
+
+type InvalidRequest struct {
+	s string
+}
+
+func newInvalidRequest(msg string) error {
+	return &InvalidRequest{msg}
+}
+
+func (i InvalidRequest) Error() string {
+	return i.s
+}
+
+func InvalidMethod(exp string) error {
+	msg := fmt.Sprintf("invalid method: %s expected", exp)
+	return newInvalidRequest(msg)
 }
 
 const (
@@ -43,10 +63,6 @@ const (
 const MASK = 0xff
 
 var nest *Nest
-
-func (b Bug) String() string {
-	return fmt.Sprintf("%d %s %s", b.Id, b.Body, b.Author)
-}
 
 // Returns a Response object with the data in input.
 func NewResponse(b *Bug, n []Bug, e error) Response {
@@ -104,17 +120,21 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 	var bug Bug
 
 	if r.Method != "POST" {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		err := InvalidMethod("POST")
+		go log.Println(err)
+		writeResponse(w, nil, err)
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
 	if err := json.Unmarshal(body, &bug); err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
@@ -124,16 +144,19 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 	// be created.
 	if err != nil {
 		if key, err = nest.NextId(); err != nil {
+			go log.Println(err)
 			writeResponse(w, nil, err)
 			return
 		}
 		bug.Id = key
 	} else if key, err = strconv.ParseInt(id, 10, 64); err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
 	if err := nest.Put(key, bug); err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
@@ -146,14 +169,19 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	var bugs []Bug
 
 	if r.Method != "GET" {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		err := InvalidMethod("GET")
+		go log.Println(err)
+		writeResponse(w, nil, err)
 		return
 	}
 
 	err := nest.Fold(func(k []byte) error {
 		if string(k) != "id_counter" {
+			fmt.Println(sltoi(k))
 			bug, err := nest.Get(sltoi(k))
+			fmt.Println(bug)
 			if err != nil {
+				go log.Println(err)
 				return err
 			}
 			bugs = append(bugs, bug)
@@ -161,30 +189,36 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 
+	fmt.Println(len(bugs)) // debug
 	writeResponse(w, bugs, err)
 }
 
 // Handles the /del endpoint.
 func delHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "DELETE" {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		err := InvalidMethod("DELETE")
+		go log.Println(err)
+		writeResponse(w, nil, err)
 		return
 	}
 
 	qry, err := getQuery("id", r.URL.RawQuery)
 	if err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
 	id, err := strconv.ParseInt(qry, 10, 64)
 	if err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
 	err = nest.Delete(id)
 	if err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}

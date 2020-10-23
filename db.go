@@ -81,6 +81,7 @@ func (n *Nest) Get(id int64) (Bug, error) {
 		return bg, err
 	}
 	defer n.buf.Reset()
+
 	return bg, n.dec.Decode(&bg)
 }
 
