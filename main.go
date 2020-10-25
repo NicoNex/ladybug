@@ -175,15 +175,13 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := nest.Fold(func(k []byte) error {
-		if string(k) != "id_counter" {
-			bug, err := nest.Get(sltoi(k))
-			if err != nil {
-				go log.Println(err)
-				return err
-			}
-			bugs = append(bugs, bug)
+	err := nest.Fold(func(k int64) error {
+		bug, err := nest.Get(k)
+		if err != nil {
+			go log.Println(err)
+			return err
 		}
+		bugs = append(bugs, bug)
 		return nil
 	})
 	writeResponse(w, bugs, err)

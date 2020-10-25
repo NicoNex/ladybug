@@ -121,8 +121,13 @@ func (n Nest) Close() error {
 // Fold iterates over all keys in the database calling the function `fn` for
 // each key. If the function returns an error, no further keys are processed
 // and the error returned.
-func (n Nest) Fold(fn func(key []byte) error) error {
-	return n.db.Fold(fn)
+func (n Nest) Fold(fn func(key int64) error) error {
+	return n.db.Fold(func(k []byte) error {
+		if string(k) != "id_counter" {
+			return fn(sltoi(k))
+		}
+		return nil
+	})
 }
 
 // Syncs the in-memory db with the disk.
