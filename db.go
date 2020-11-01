@@ -4,18 +4,12 @@ import (
 	"bytes"
 	"encoding/gob"
 	"log"
-	"sync"
 
 	"github.com/prologic/bitcask"
 )
 
-// Just the nest of all the bugs.
 type Nest struct {
-	buf bytes.Buffer
-	dec *gob.Decoder
-	enc *gob.Encoder
-	db  *bitcask.Bitcask
-	sync.Mutex
+	db *bitcask.Bitcask
 }
 
 var COUNTER_KEY = []byte("id_counter")
@@ -42,46 +36,39 @@ func sltoi(sl []byte) (i int64) {
 	return
 }
 
-func NewNest(path string) *Nest {
+func NewNest(path string) Nest {
 	db, err := bitcask.Open(path, bitcask.WithSync(true))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	var n Nest
-	n.dec = gob.NewDecoder(&n.buf)
-	n.enc = gob.NewEncoder(&n.buf)
-	n.db = db
-
-	return &n
+	return Nest{db}
 }
 
 // Saves the bug into the nest.
-func (n *Nest) Put(id int64, b Bug) error {
-	n.Lock()
-	defer n.Unlock()
-	if err := n.enc.Encode(b); err != nil {
+func (n Nest) Put(id int64, b Bug) error {
+	var buf bytes.Buffer
+	var enc = gob.NewEncoder(&buf)
+
+	if err := enc.Encode(b); err != nil {
 		return err
 	}
-	defer n.buf.Reset()
-	return n.db.Put(itosl(id), n.buf.Bytes())
+	return n.db.Put(itosl(id), buf.Bytes())
 }
 
 // Retrieves a bug from the nest.
-func (n *Nest) Get(id int64) (Bug, error) {
+func (n Nest) Get(id int64) (Bug, error) {
 	var bg Bug
+	var buf bytes.Buffer
+	var dec = gob.NewDecoder(&buf)
 
 	b, err := n.db.Get(itosl(id))
 	if err != nil {
 		return bg, err
 	}
-	n.Lock()
-	defer n.Unlock()
-	if _, err = n.buf.Write(b); err != nil {
+	if _, err = buf.Write(b); err != nil {
 		return bg, err
 	}
-	defer n.buf.Reset()
-	return bg, n.dec.Decode(&bg)
+	return bg, dec.Decode(&bg)
 }
 
 // Deletes a bug from the nest.
@@ -128,11 +115,4 @@ func (n Nest) Fold(fn func(key int64) error) error {
 		}
 		return nil
 	})
-}
-
-// Syncs the in-memory db with the disk.
-func (n Nest) sync() {
-	if err := n.db.Sync(); err != nil {
-		log.Println(err)
-	}
 }
