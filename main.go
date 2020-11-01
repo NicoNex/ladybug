@@ -189,6 +189,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handles the /del endpoint.
 func delHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method != "DELETE" {
 		err := InvalidMethod("DELETE")
 		go log.Println(err)

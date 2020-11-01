@@ -68,7 +68,6 @@ func (n Nest) Put(id int64, b Bug) error {
 func (n Nest) Get(id int64) (Bug, error) {
 	var bg Bug
 	var buf bytes.Buffer
-	var dec = gob.NewDecoder(&buf)
 
 	b, err := n.db.Get(itosl(id))
 	if err != nil {
@@ -77,6 +76,7 @@ func (n Nest) Get(id int64) (Bug, error) {
 	if _, err = buf.Write(b); err != nil {
 		return bg, wrap("Get, buffer", err)
 	}
+	dec := gob.NewDecoder(&buf)
 	return bg, wrap("Get, decoder", dec.Decode(&bg))
 }
 
