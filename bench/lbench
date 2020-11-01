@@ -75,15 +75,21 @@ def upload_bugs(n: int, conc: bool = True):
 
 	print(f"Elapsed time: {time.time() - start}s")
 
-def get_bugs():
+def get_bugs(verbose=True) -> dict:
 	resp = req.get(f"{BASE_URL}/get")
 	j = json.loads(resp.content)
 
 	for b in j["bugs"]:
-		print(f"ID: {b['id']}, Body: {b['body']}")
+		if verbose:
+			print(f"ID: {b['id']}, Body: {b['body']}")
+
+	return j["bugs"]
 
 def clear_bugs():
-	pass
+	for b in get_bugs(False):
+		print(f"Deleting bug #{b['id']}...")
+		resp = req.delete(f"{BASE_URL}/delete?id={b['id']}")
+
 
 if __name__ == "__main__":
 	arg = docopt(__doc__)
