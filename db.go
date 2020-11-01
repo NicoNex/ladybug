@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"log"
 
 	"github.com/prologic/bitcask"
@@ -36,10 +37,18 @@ func sltoi(sl []byte) (i int64) {
 	return
 }
 
+// Returns a wrapped error.
+func wrap(n string, e error) (ret error) {
+	if e != nil {
+		ret = fmt.Errorf("%s: %v", n, e)
+	}
+	return
+}
+
 func NewNest(path string) Nest {
 	db, err := bitcask.Open(path, bitcask.WithSync(true))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(wrap("NewNest", err))
 	}
 	return Nest{db}
 }
@@ -50,9 +59,9 @@ func (n Nest) Put(id int64, b Bug) error {
 	var enc = gob.NewEncoder(&buf)
 
 	if err := enc.Encode(b); err != nil {
-		return err
+		return wrap("Put, encoder", err)
 	}
-	return n.db.Put(itosl(id), buf.Bytes())
+	return wrap("Put, bitcask", n.db.Put(itosl(id), buf.Bytes()))
 }
 
 // Retrieves a bug from the nest.
@@ -63,17 +72,17 @@ func (n Nest) Get(id int64) (Bug, error) {
 
 	b, err := n.db.Get(itosl(id))
 	if err != nil {
-		return bg, err
+		return bg, wrap("Get, bitcask", err)
 	}
 	if _, err = buf.Write(b); err != nil {
-		return bg, err
+		return bg, wrap("Get, buffer", err)
 	}
-	return bg, dec.Decode(&bg)
+	return bg, wrap("Get, decoder", dec.Decode(&bg))
 }
 
 // Deletes a bug from the nest.
 func (n Nest) Delete(id int64) error {
-	return n.db.Delete(itosl(id))
+	return wrap("Delete, bitcask", n.db.Delete(itosl(id)))
 }
 
 // Returns all the bugs' keys.
@@ -90,19 +99,19 @@ func (n Nest) NextId() (int64, error) {
 
 	b, err := n.db.Get(COUNTER_KEY)
 	if err != nil {
-		return 0, err
+		return 0, wrap("NextId, bitcask", err)
 	}
 
 	id := sltoi(b) + 1
 	if err = n.db.Put(COUNTER_KEY, itosl(id)); err != nil {
-		return 0, err
+		return 0, wrap("NextId, bitcask", err)
 	}
 	return id, nil
 }
 
 // Closes the db.
 func (n Nest) Close() error {
-	return n.db.Close()
+	return wrap("Close, bitcask", n.db.Close())
 }
 
 // Fold iterates over all keys in the database calling the function `fn` for

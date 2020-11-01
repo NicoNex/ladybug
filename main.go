@@ -62,7 +62,7 @@ const (
 
 const MASK = 0xff
 
-var nest *Nest
+var nest Nest
 
 // Returns a Response object with the data in input.
 func NewResponse(b *Bug, n []Bug, e error) Response {
