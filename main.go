@@ -119,8 +119,9 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 	var key int64
 	var bug Bug
 
-	if r.Method != "POST" {
-		err := InvalidMethod("POST")
+	if r.Method != "PUT" {
+		fmt.Println(r.Method)
+		err := InvalidMethod("PUT")
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return

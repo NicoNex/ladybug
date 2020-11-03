@@ -7,8 +7,16 @@ export class Response implements IResponse {
     bug?: Bug;
 
     constructor(data?: IResponse) {
-        for (const property in Object.keys(data)) {
-            this[property] = data[property];
+        // for (const property in Object.keys(data)) {
+        //     this[property] = data[property];
+        // }
+        this.ok = data.ok;
+        if (data.bugs instanceof Array && data.bugs.length !== 0){
+            this.bugs = data.bugs;
+        } else {
+            this.bugs = [];
         }
+        this.err = data.err;
+        this.bug = data.bug;
     }
 }

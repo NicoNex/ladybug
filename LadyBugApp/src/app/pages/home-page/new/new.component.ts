@@ -22,7 +22,6 @@ export class NewComponent implements OnInit {
   ngOnInit(): void {
     this.newBug = new Bug(
       {
-        id: 10,
           open: true,
           tags: new Array<string>(),
           date: Math.round(new Date().getTime() / 1000),
