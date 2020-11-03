@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/rs/cors"
 )
 
 type Comment struct {
@@ -220,40 +222,19 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, nil, nil)
 }
 
-func enableCors(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
-}
-
 func main() {
 	var port string
 
 	flag.StringVar(&port, "p", "8080", "Specify the port to use.")
 	flag.Parse()
 
-	http.HandleFunc("/put", func(w http.ResponseWriter, r *http.Request) {
-		enableCors(w)
-		if r.Method == "OPTIONS" {
-			return
-		}
-		putHandler(w, r)
-	})
-	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
-		enableCors(w)
-		if r.Method == "OPTIONS" {
-			return
-		}
-		getHandler(w, r)
-	})
-	http.HandleFunc("/del", func(w http.ResponseWriter, r *http.Request) {
-		enableCors(w)
-		if r.Method == "OPTIONS" {
-			return
-		}
-		delHandler(w, r)
-	})
+	mux := http.NewServeMux()
+	mux.HandleFunc("/put", putHandler)
+	mux.HandleFunc("/get", getHandler)
+	mux.HandleFunc("/del", delHandler)
+	handler := cors.Default().Handler(mux)
 
 	nest = NewNest(path)
 	log.Printf("running on port %s...", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), handler))
 }

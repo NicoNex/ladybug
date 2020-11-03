@@ -48,9 +48,9 @@ mock = {
 BASE_URL = "http://localhost:8080"
 
 def put_bug(bug: dict):
-	resp = req.post(f"{BASE_URL}/put", json=bug)
+	resp = req.put(f"{BASE_URL}/put", json=bug)
 	if resp.status_code != 200:
-		print(f"Failed to put bug #{i}", resp.content)
+		print(f"Failed to put bug #{bug['id']}", resp.content)
 
 def wait(pool: list):
 	for p in pool:
