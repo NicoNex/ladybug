@@ -50,8 +50,8 @@ func (i InvalidRequest) Error() string {
 	return i.s
 }
 
-func InvalidMethod(exp string) error {
-	msg := fmt.Sprintf("invalid method: %s expected", exp)
+func InvalidMethod(exp, got string) error {
+	msg := fmt.Sprintf("invalid method: expected '%s', got '%s'", exp, got)
 	return newInvalidRequest(msg)
 }
 
@@ -120,7 +120,7 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 	var bug Bug
 
 	if r.Method != "PUT" {
-		err := InvalidMethod("PUT")
+		err := InvalidMethod("PUT", r.Method)
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
@@ -169,7 +169,7 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	var bugs []Bug
 
 	if r.Method != "GET" {
-		err := InvalidMethod("GET")
+		err := InvalidMethod("GET", r.Method)
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
@@ -189,8 +189,8 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handles the /del endpoint.
 func delHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		err := InvalidMethod("GET")
+	if r.Method != "DELETE" {
+		err := InvalidMethod("DELETE", r.Method)
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
@@ -220,15 +220,38 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, nil, nil)
 }
 
+func enableCors(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
+}
+
 func main() {
 	var port string
 
 	flag.StringVar(&port, "p", "8080", "Specify the port to use.")
 	flag.Parse()
 
-	http.HandleFunc("/put", putHandler)
-	http.HandleFunc("/get", getHandler)
-	http.HandleFunc("/del", delHandler)
+	http.HandleFunc("/put", func(w http.ResponseWriter, r *http.Request) {
+		enableCors(w)
+		if r.Method == "OPTIONS" {
+			return
+		}
+		putHandler(w, r)
+	})
+	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
+		enableCors(w)
+		if r.Method == "OPTIONS" {
+			return
+		}
+		getHandler(w, r)
+	})
+	http.HandleFunc("/del", func(w http.ResponseWriter, r *http.Request) {
+		enableCors(w)
+		if r.Method == "OPTIONS" {
+			return
+		}
+		delHandler(w, r)
+	})
 
 	nest = NewNest(path)
 	log.Printf("running on port %s...", port)
