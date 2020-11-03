@@ -119,8 +119,8 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 	var key int64
 	var bug Bug
 
-	if r.Method != "POST" {
-		err := InvalidMethod("POST")
+	if r.Method != "PUT" {
+		err := InvalidMethod("PUT")
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
@@ -189,9 +189,8 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handles the /del endpoint.
 func delHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method != "DELETE" {
-		err := InvalidMethod("DELETE")
+	if r.Method != "GET" {
+		err := InvalidMethod("GET")
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
