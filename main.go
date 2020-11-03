@@ -234,6 +234,7 @@ func main() {
 	http.HandleFunc("/put", func(w http.ResponseWriter, r *http.Request) {
 		enableCors(w)
 		if r.Method == "OPTIONS" {
+			writeResponse(w, nil, nil)
 			return
 		}
 		putHandler(w, r)
@@ -241,6 +242,7 @@ func main() {
 	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
 		enableCors(w)
 		if r.Method == "OPTIONS" {
+			writeResponse(w, nil, nil)
 			return
 		}
 		getHandler(w, r)
@@ -248,6 +250,7 @@ func main() {
 	http.HandleFunc("/del", func(w http.ResponseWriter, r *http.Request) {
 		enableCors(w)
 		if r.Method == "OPTIONS" {
+			writeResponse(w, nil, nil)
 			return
 		}
 		delHandler(w, r)
