@@ -105,7 +105,14 @@ export class IssuesComponent implements OnInit, OnDestroy {
   }
 
   delete(): void {
-    this.bugItems = this.bugItems.filter((item) => item.toggle !== true);
+    this.bugItems.filter((item) => item.toggle === true).forEach((issue) => {
+      this.issueService.deleteBug(issue.bug).subscribe(
+        (response: Response) => {
+          console.log(response);
+        }
+      )
+    });
+
     console.log(this.bugItems);
   }
 
