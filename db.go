@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/prologic/bitcask"
+	"git.mills.io/prologic/bitcask"
 )
 
 type Nest struct {
