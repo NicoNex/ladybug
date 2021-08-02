@@ -1,0 +1,35 @@
+
+  <nb-card size="medium">
+    <nb-card-header>
+      <div id="container">
+        <div id="leftside">
+            <input type="text" nbInput placeholder="Search Bug">
+        </div>
+        <div id="middleside"></div>
+        <div id="rightside">
+            <button nbButton class="issue open" status="primary" size="tiny" (click)="newIssue()">New Issue</button>
+            <ng-container *ngIf="showButtons()">
+              <button nbButton class="issue" status="danger" size="tiny" (click)="delete()">Delete Issue</button>
+              <button nbButton class="issue" [nbContextMenu]="items" nbContextMenuTag="choose-context-menu" status="info" size="tiny">Mark as</button>
+            </ng-container>
+        </div> 
+      </div>
+    </nb-card-header>
+    <nb-list>
+      <nb-list-item *ngFor="let item of bugItems; let index = index; trackBy: trackByFn">
+        <nb-checkbox  class="icon-status-open" status="basic" style="margin-right: 30px; margin-top: 5px;" (checkedChange)="toggle($event, index)"></nb-checkbox>
+        <ng-container *ngIf="item.bug.open; else notOpen">
+          <nb-icon class="icon-status-open"icon="alert-circle-outline"></nb-icon>
+        </ng-container>
+        <ng-template #notOpen>
+          <nb-icon class="icon-status-closed"icon="checkmark-circle-2-outline"></nb-icon>
+        </ng-template>
+        <a>{{ item.bug.body }}</a>
+        <ng-container *ngFor="let tag of item.bug.tags">
+          <button nbButton shape="round" size="tiny" [status]="setTagStatus(tag)" style="margin-left: 10px;">{{tag}}</button>
+        </ng-container>
+      </nb-list-item>
+    </nb-list>
+  </nb-card>
+
+

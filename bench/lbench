@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+
+"""Ladybug Benchmark.
+
+Usage:
+    lbench
+    lbench [options] put [-c, --concurrent] <num>
+    lbench [options] get
+    lbench [options] clear
+
+Options:
+  -h, --help     Display this message [default: True].
+  -v, --verbose  Display more text [default: False].
+"""
+
+import json
+import time
+import requests as req
+from copy import deepcopy
+from multiprocessing import Process
+from docopt import docopt
+
+mock = {
+	"body": "",
+	"open": True,
+	"tags": [
+		"font-end",
+		"back-end",
+		"angular",
+		"custom-tag"
+	],
+	"date": 1234567890,
+	"comments": [
+		{
+			"date": 221229132,
+			"text": "il mio mirabolante commento",
+			"author": "NicoNex"
+		},
+		{
+			"date": 221229132,
+			"text": "Altro mirabolante permesso",
+			"author": "Giuseppe"
+		}
+	],
+	"author": "NicoNex"
+}
+
+BASE_URL = "http://localhost:8080"
+
+def put_bug(bug: dict):
+	resp = req.post(f"{BASE_URL}/put", json=bug)
+	if resp.status_code != 200:
+		print(f"Failed to put bug #{i}", resp.content)
+
+def wait(pool: list):
+	for p in pool:
+		p.join()
+
+def upload_bugs(n: int, conc: bool = True):
+	pool = []
+	start = time.time()
+	for i in range(n):
+		print(f"Put bug #{i}")
+		mock["body"] = f"bench_{i}"
+
+		if conc:
+			p = Process(target=put_bug, args=(mock,))
+			p.start()
+			pool.append(p)
+		else:
+			put_bug(mock)
+
+	if conc:
+		wait(pool)
+
+	print(f"Elapsed time: {time.time() - start}s")
+
+def get_bugs(verbose=True) -> dict:
+	resp = req.get(f"{BASE_URL}/get")
+	j = json.loads(resp.content)
+
+	for b in j["bugs"]:
+		if verbose:
+			print(f"ID: {b['id']}, Body: {b['body']}")
+
+	return j["bugs"]
+
+def clear_bugs():
+	for b in get_bugs(False):
+		print(f"Deleting bug #{b['id']}...")
+		resp = req.delete(f"{BASE_URL}/delete?id={b['id']}")
+
+
+if __name__ == "__main__":
+	arg = docopt(__doc__)
+
+	try:
+		if arg["put"]:
+			upload_bugs(int(arg["<num>"]), arg["--concurrent"])
+
+		elif arg["get"]:
+			get_bugs()
+
+		elif arg["clear"]:
+			clear_bugs()
+
+	except Exception as e:
+		print(e)

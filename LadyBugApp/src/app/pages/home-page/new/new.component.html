@@ -1,0 +1,36 @@
+
+<nb-card>
+    <nb-card-header>New Issue</nb-card-header>
+    <nb-card-body>
+        <form [formGroup]="issueForm">
+        <div class="form-group">
+            <input type="text" nbInput fullWidth placeholder="Description" formControlName="description">
+        </div>
+        <div class="form-group">
+            <input type="text" nbInput fullWidth placeholder="Author" (ngModelChange)="test()" formControlName="author">
+        </div>
+        <div class="form-group">
+            <textarea style="resize: vertical; min-height: 70px;" nbInput fullWidth placeholder="Comment" formControlName="comment"></textarea>
+        </div>
+        </form>
+        <div class="form-group">
+            <span>Tags*</span>
+        </div>
+         <div class="validation-checkboxes">
+            <nb-checkbox status="primary" (checkedChange)="toggle($event, 'front-end')">Front-end</nb-checkbox>
+            <nb-checkbox status="success" (checkedChange)="toggle($event, 'back-end')">Back-end</nb-checkbox>
+            <nb-checkbox status="info" (checkedChange)="toggle($event, 'angular')">Angular</nb-checkbox>
+            <nb-checkbox status="warning" (checkedChange)="toggle($event, 'cazzi-magici')">Cazzi-magici</nb-checkbox>
+        </div>
+        <!-- <ng-container formArrayName="tags">
+            <div *ngFor="let tag of tags.controls">
+
+            </div>
+        </ng-container>-->
+        
+        
+        <button type="submit" style="float: right;" nbButton status="success" [disabled]="!issueForm.valid" (click)="save()">Send</button>
+    </nb-card-body>
+
+    
+</nb-card>

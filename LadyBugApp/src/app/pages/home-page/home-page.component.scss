@@ -1,3 +1,63 @@
 #logo {
   width: 4vw;
+  float: right;
 }
+
+:host ::ng-deep #menu {
+  width: 45px;
+  float: left;
+}
+
+:host nb-layout-header button:last-child {
+  margin-left: right;
+}
+
+:host ::ng-deep #container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+
+:host ::ng-deep #leftside {
+  width: 20%;
+  float: right;
+}
+
+#leftsidecontainer {
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+
+#left {
+  width: 30%;
+  display: flex;
+}
+
+#right {
+  width: 70%;
+  display: flex;
+}
+
+:host ::ng-deep #middleside {
+  width: 40%;
+}
+
+:host ::ng-deep #rightside {
+  width: 49%;
+}
+
+#button-menu {
+  height: 100%;
+  width: 44px;
+  background: cadetblue;
+}
+
+#ladyspan {
+  text-align: end;
+  width: 100%;
+  margin-top: 10px;
+  font-family: 'ladyfonts';
+  font-size: 40px;
+}
+

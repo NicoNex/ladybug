@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -21,18 +20,39 @@ type Comment struct {
 type Bug struct {
 	Id       int64     `json:"id"`
 	Body     string    `json:"body"`
-	Open     bool      `json:"is_open"`
+	Open     bool      `json:"open"`
 	Tags     []string  `json:"tags"`
 	Date     int64     `json:"date"`
 	Comments []Comment `json:"comments"`
 	Author   string    `json:"author"`
 }
 
+func (b Bug) String() string {
+	return fmt.Sprintf("%d %s %s", b.Id, b.Body, b.Author)
+}
+
 type Response struct {
 	Ok   bool   `json:"ok"`
 	Err  string `json:"err,omitempty"`
 	Bug  *Bug   `json:"bug,omitempty"`
-	Nest []Bug  `json:"nest,omitempty"`
+	Bugs []Bug  `json:"bugs,omitempty"`
+}
+
+type InvalidRequest struct {
+	s string
+}
+
+func newInvalidRequest(msg string) error {
+	return &InvalidRequest{msg}
+}
+
+func (i InvalidRequest) Error() string {
+	return i.s
+}
+
+func InvalidMethod(exp, got string) error {
+	msg := fmt.Sprintf("invalid method: expected '%s', got '%s'", exp, got)
+	return newInvalidRequest(msg)
 }
 
 const (
@@ -44,24 +64,19 @@ const MASK = 0xff
 
 var nest Nest
 
-func (b Bug) String() string {
-	return fmt.Sprintf("%d %s %s", b.Id, b.Body, b.Author)
-}
-
 // Returns a Response object with the data in input.
 func NewResponse(b *Bug, n []Bug, e error) Response {
 	return Response{
 		Ok:   e == nil,
 		Err:  etos(e),
 		Bug:  b,
-		Nest: n,
+		Bugs: n,
 	}
 }
 
 // Returns the JSON of a new Response object with the data in input.
 func NewResponseJson(b *Bug, n []Bug, e error) []byte {
-	resp := NewResponse(b, n, e)
-	j, err := json.Marshal(resp)
+	j, err := json.Marshal(NewResponse(b, n, e))
 	if err != nil {
 		log.Println(err)
 	}
@@ -70,45 +85,11 @@ func NewResponseJson(b *Bug, n []Bug, e error) []byte {
 
 // Returns the string containing the error mesage or an empty string if the
 // error is nil.
-func etos(err error) string {
-	if err != nil {
-		return err.Error()
+func etos(e error) string {
+	if e != nil {
+		return e.Error()
 	}
 	return ""
-}
-
-// Converts an int64 to an array of type [8]byte.
-func itoa(i int64) (a [8]byte) {
-	for j := 0; j < 8; j++ {
-		var shift = j * 8
-		a[j] = byte((i & (MASK << shift)) >> shift)
-	}
-	return
-}
-
-// Converts an array of type [8]byte to int64.
-func atoi(b [8]byte) (i int64) {
-	for k, v := range b {
-		var shift = k * 8
-		i |= int64(v) << shift
-	}
-	return
-}
-
-// Converts an array of type [8]byte to a byte slice.
-func atob(a [8]byte) (b []byte) {
-	for _, v := range a {
-		b = append(b, v)
-	}
-	return
-}
-
-// Converts a bytes slice of len 8 to an array of type [8]byte.
-func btoa(b []byte) (a [8]byte) {
-	if len(b) == 8 {
-		copy(a[:], b[0:8])
-	}
-	return
 }
 
 // Returns the value of an url raw query or error if missing.
@@ -138,35 +119,44 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 	var key int64
 	var bug Bug
 
-	if r.Method != "POST" {
-		writeResponse(w, nil, errors.New("Invalid request"))
+	if r.Method != "PUT" {
+		err := InvalidMethod("PUT", r.Method)
+		go log.Println(err)
+		writeResponse(w, nil, err)
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
 	if err := json.Unmarshal(body, &bug); err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
 	id, err := getQuery("id", r.URL.RawQuery)
+	// If the error is not nil it means the bug doesn't exist yet, thus needs to
+	// be created.
 	if err != nil {
 		if key, err = nest.NextId(); err != nil {
+			go log.Println(err)
 			writeResponse(w, nil, err)
 			return
 		}
 		bug.Id = key
 	} else if key, err = strconv.ParseInt(id, 10, 64); err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
-	if err := nest.Put(atob(itoa(key)), bug); err != nil {
+	if err := nest.Put(key, bug); err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
@@ -179,45 +169,50 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	var bugs []Bug
 
 	if r.Method != "GET" {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		err := InvalidMethod("GET", r.Method)
+		go log.Println(err)
+		writeResponse(w, nil, err)
 		return
 	}
 
-	err := nest.Fold(func(k []byte) error {
-		if string(k) != "id_counter" {
-			bug, err := nest.Get(k) // here it happens the error
-			if err != nil {
-				return err
-			}
-			bugs = append(bugs, bug)
+	err := nest.Fold(func(k int64) error {
+		bug, err := nest.Get(k)
+		if err != nil {
+			go log.Println(err)
+			return err
 		}
+		bugs = append(bugs, bug)
 		return nil
 	})
-
 	writeResponse(w, bugs, err)
 }
 
 // Handles the /del endpoint.
 func delHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "DELETE" {
-		writeResponse(w, nil, errors.New("Invalid request"))
+		err := InvalidMethod("DELETE", r.Method)
+		go log.Println(err)
+		writeResponse(w, nil, err)
 		return
 	}
 
 	qry, err := getQuery("id", r.URL.RawQuery)
 	if err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
 	id, err := strconv.ParseInt(qry, 10, 64)
 	if err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
 
-	err = nest.Delete(atob(itoa(id)))
+	err = nest.Delete(id)
 	if err != nil {
+		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
 	}
@@ -225,16 +220,40 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, nil, nil)
 }
 
+func enableCors(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
+}
+
 func main() {
 	var port string
 
-	flag.StringVar(&port, "-p", "8080", "Specify the port to use.")
+	flag.StringVar(&port, "p", "8080", "Specify the port to use.")
 	flag.Parse()
 
-	http.HandleFunc("/put", putHandler)
-	http.HandleFunc("/get", getHandler)
-	http.HandleFunc("/del", delHandler)
+	http.HandleFunc("/put", func(w http.ResponseWriter, r *http.Request) {
+		enableCors(w)
+		if r.Method == "OPTIONS" {
+			return
+		}
+		putHandler(w, r)
+	})
+	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
+		enableCors(w)
+		if r.Method == "OPTIONS" {
+			return
+		}
+		getHandler(w, r)
+	})
+	http.HandleFunc("/del", func(w http.ResponseWriter, r *http.Request) {
+		enableCors(w)
+		if r.Method == "OPTIONS" {
+			return
+		}
+		delHandler(w, r)
+	})
 
 	nest = NewNest(path)
+	log.Printf("running on port %s...", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
