@@ -9,9 +9,13 @@ import (
 	"github.com/prologic/bitcask"
 )
 
-type Nest struct {
-	db *bitcask.Bitcask
-}
+// type Nest struct {
+// 	db *bitcask.Bitcask
+// }
+
+type Nest string
+
+const Mask = 0xff
 
 var COUNTER_KEY = []byte("id_counter")
 
@@ -19,7 +23,7 @@ var COUNTER_KEY = []byte("id_counter")
 func itosl(i int64) (sl []byte) {
 	for j := 0; j < 8; j++ {
 		shift := j * 8
-		sl = append(sl, byte(i&(MASK<<shift)>>shift))
+		sl = append(sl, byte(i&(Mask<<shift)>>shift))
 	}
 	return
 }
@@ -40,17 +44,13 @@ func sltoi(sl []byte) (i int64) {
 // Returns a wrapped error.
 func wrap(n string, e error) (ret error) {
 	if e != nil {
-		ret = fmt.Errorf("%s: %v", n, e)
+		ret = fmt.Errorf("%s: %w", n, e)
 	}
 	return
 }
 
 func NewNest(path string) Nest {
-	db, err := bitcask.Open(path, bitcask.WithSync(true))
-	if err != nil {
-		log.Fatal(wrap("NewNest", err))
-	}
-	return Nest{db}
+	return Nest(path)
 }
 
 // Saves the bug into the nest.
@@ -59,9 +59,16 @@ func (n Nest) Put(id int64, b Bug) error {
 	var enc = gob.NewEncoder(&buf)
 
 	if err := enc.Encode(b); err != nil {
-		return wrap("Put, encoder", err)
+		return wrap("Put, enc.Encode", err)
 	}
-	return wrap("Put, bitcask", n.db.Put(itosl(id), buf.Bytes()))
+
+	db, err := bitcask.Open(string(n))
+	if err != nil {
+		return wrap("Put, bitcask.Open", err)
+	}
+	defer db.Close()
+
+	return wrap("Put, bitcask", db.Put(itosl(id), buf.Bytes()))
 }
 
 // Retrieves a bug from the nest.
@@ -69,7 +76,13 @@ func (n Nest) Get(id int64) (Bug, error) {
 	var bg Bug
 	var buf bytes.Buffer
 
-	b, err := n.db.Get(itosl(id))
+	db, err := bitcask.Open(string(n))
+	if err != nil {
+		return Bug{}, wrap("Get, bitcask.Open", err)
+	}
+	defer db.Close()
+
+	b, err := db.Get(itosl(id))
 	if err != nil {
 		return bg, wrap("Get, bitcask", err)
 	}
@@ -82,43 +95,61 @@ func (n Nest) Get(id int64) (Bug, error) {
 
 // Deletes a bug from the nest.
 func (n Nest) Delete(id int64) error {
-	return wrap("Delete, bitcask", n.db.Delete(itosl(id)))
+	db, err := bitcask.Open(string(n))
+	if err != nil {
+		return wrap("Delete, bitcask.Open", err)
+	}
+	defer db.Close()
+
+	return wrap("Delete, bitcask", db.Delete(itosl(id)))
 }
 
 // Returns all the bugs' keys.
 func (n Nest) Keys() chan []byte {
-	return n.db.Keys()
+	db, err := bitcask.Open(string(n))
+	if err != nil {
+		return nil
+	}
+	defer db.Close()
+	return db.Keys()
 }
 
 // Returns the next bug id.
 func (n Nest) NextId() (int64, error) {
-	if !n.db.Has(COUNTER_KEY) {
-		n.db.Put(COUNTER_KEY, itosl(0))
+	db, err := bitcask.Open(string(n))
+	if err != nil {
+		return 0, wrap("NextId, bitcask.Open", err)
+	}
+	defer db.Close()
+
+	if !db.Has(COUNTER_KEY) {
+		db.Put(COUNTER_KEY, itosl(0))
 		return 0, nil
 	}
 
-	b, err := n.db.Get(COUNTER_KEY)
+	b, err := db.Get(COUNTER_KEY)
 	if err != nil {
 		return 0, wrap("NextId, bitcask", err)
 	}
 
 	id := sltoi(b) + 1
-	if err = n.db.Put(COUNTER_KEY, itosl(id)); err != nil {
+	if err = db.Put(COUNTER_KEY, itosl(id)); err != nil {
 		return 0, wrap("NextId, bitcask", err)
 	}
 	return id, nil
-}
-
-// Closes the db.
-func (n Nest) Close() error {
-	return wrap("Close, bitcask", n.db.Close())
 }
 
 // Fold iterates over all keys in the database calling the function `fn` for
 // each key. If the function returns an error, no further keys are processed
 // and the error returned.
 func (n Nest) Fold(fn func(key int64) error) error {
-	return n.db.Fold(func(k []byte) error {
+	db, err := bitcask.Open(string(n))
+	if err != nil {
+		return wrap("Fold, bitcask.Open", err)
+	}
+	defer db.Close()
+
+	return db.Fold(func(k []byte) error {
 		if string(k) != "id_counter" {
 			return fn(sltoi(k))
 		}

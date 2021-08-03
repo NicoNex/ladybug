@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/rs/cors"
 )
 
 type Comment struct {
@@ -56,11 +58,9 @@ func InvalidMethod(exp, got string) error {
 }
 
 const (
-	OK                    = 200
-	INTERNAL_SERVER_ERROR = 500
+	Ok                  = 200
+	InternalServerError = 500
 )
-
-const MASK = 0xff
 
 var nest Nest
 
@@ -105,10 +105,10 @@ func getQuery(name string, rawQuery string) (string, error) {
 
 // Creates the response to send back and writes it in w.
 func writeResponse(w http.ResponseWriter, b []Bug, e error) {
-	var status = OK
+	var status = Ok
 	resp := NewResponseJson(nil, b, e)
 	if e != nil {
-		status = INTERNAL_SERVER_ERROR
+		status = InternalServerError
 	}
 	w.WriteHeader(status)
 	fmt.Fprintln(w, string(resp))
@@ -119,8 +119,8 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 	var key int64
 	var bug Bug
 
-	if r.Method != "PUT" {
-		err := InvalidMethod("PUT", r.Method)
+	if r.Method != http.MethodPost {
+		err := InvalidMethod(http.MethodPost, r.Method)
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
@@ -168,8 +168,8 @@ func putHandler(w http.ResponseWriter, r *http.Request) {
 func getHandler(w http.ResponseWriter, r *http.Request) {
 	var bugs []Bug
 
-	if r.Method != "GET" {
-		err := InvalidMethod("GET", r.Method)
+	if r.Method != http.MethodGet {
+		err := InvalidMethod(http.MethodGet, r.Method)
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
@@ -189,8 +189,8 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handles the /del endpoint.
 func delHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "DELETE" {
-		err := InvalidMethod("DELETE", r.Method)
+	if r.Method != http.MethodGet {
+		err := InvalidMethod(http.MethodGet, r.Method)
 		go log.Println(err)
 		writeResponse(w, nil, err)
 		return
@@ -220,40 +220,21 @@ func delHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, nil, nil)
 }
 
-func enableCors(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
-}
-
 func main() {
 	var port string
 
 	flag.StringVar(&port, "p", "8080", "Specify the port to use.")
 	flag.Parse()
 
-	http.HandleFunc("/put", func(w http.ResponseWriter, r *http.Request) {
-		enableCors(w)
-		if r.Method == "OPTIONS" {
-			return
-		}
-		putHandler(w, r)
-	})
-	http.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
-		enableCors(w)
-		if r.Method == "OPTIONS" {
-			return
-		}
-		getHandler(w, r)
-	})
-	http.HandleFunc("/del", func(w http.ResponseWriter, r *http.Request) {
-		enableCors(w)
-		if r.Method == "OPTIONS" {
-			return
-		}
-		delHandler(w, r)
-	})
-
 	nest = NewNest(path)
+
+	mux := http.NewServerMux()
+
+	mux.HandleFunc("/put", putHandler)
+	mux.HandleFunc("/get", getHandler)
+	mux.HandleFunc("/del", delHandler)
+
 	log.Printf("running on port %s...", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	handler := cors.Default().Handler(mux)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), handler))
 }
